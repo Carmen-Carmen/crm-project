@@ -92,6 +92,5 @@ buildNumber.properties
 .metadata
 
 /crm/target/
-/crm-mybatis-generator/target/
-
 /crm/src/main/resources/jdbc.properties
+/crm-mybatis-generator/
