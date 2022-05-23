@@ -1,6 +1,7 @@
 package com.lingrui.crm.workbench.mapper;
 
 import com.lingrui.crm.workbench.domain.Activity;
+import org.springframework.stereotype.Repository;
 
 public interface ActivityMapper {
     /**
@@ -50,4 +51,14 @@ public interface ActivityMapper {
      * @mbggenerated Mon May 23 17:28:15 CST 2022
      */
     int updateByPrimaryKey(Activity record);
+
+    /**
+     * @param activity:
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 自己书写的新增市场活动
+     * @date 2022/5/23 17:50
+     */
+    int insertActivity(Activity activity);
 }

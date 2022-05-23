@@ -20,10 +20,84 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             src="jquery/bootstrap-datetimepicker-master/locale/bootstrap-datetimepicker.zh-CN.js"></script>
 
     <script type="text/javascript">
-
+        //入口函数
         $(function () {
+            //给"创建"按钮绑定单击事件
+            $("#createActivityBtn").click(function () {
+                //使用js实现按钮点击弹出modal框的好处：在弹出之前还能写逻辑
+                //比如在弹出窗口之前，清空表单中的所有数据
+                //方法：重置form表单中所有的input
+                //获取jquery对象     jquery对象的第一个，才是表单
+                $("#createActivityForm").get(0).reset();
 
+                //弹出创建市场活动的modal窗口
+                $("#createActivityModal").modal("show");
+            });
 
+            $("#saveCreateActivityBtn").click(function () {
+                //1、收集表单中填入的参数
+                let owner = $("#create-marketActivityOwner").val();
+                let name = $.trim($("#create-marketActivityName").val());
+                let startDate = $("#create-startDate").val();
+                let endDate = $("#create-endDate").val();
+                let cost = $.trim($("#create-cost").val());
+                let description = $.trim($("#create-description").val());
+
+                //2、表单验证
+                if (owner == null) {
+                    alert("所有者不能为空！");
+                    return;
+                }
+                if (name == null) {
+                    alert("活动名称不能为空！");
+                    return;
+                }
+                //验证开始日期和结束日期
+                if (startDate != null && endDate != null) {
+                    //在js中，可以把字符串类型的日期转化为Date类型：new Date()之后，分别设置这个Date对象的年、月、日
+                    //也可以通过字符串比较大小，和Java中的规则一样，逐位比较
+                    if (endDate < startDate) {
+                        alert("结束日期不能比开始日期早！")
+                        return;
+                    }
+                }
+                //验证成本是否为非负整数，使用正则表达式
+                let reg = /^(([1-9]\d*)|0)$/;//0或正整数
+                if (!reg.test(cost)) {
+                    alert("成本只能为非负整数！")
+                    return;
+                }
+
+                //3、发送异步请求
+                $.ajax({
+                    url:"workbench/activity/saveCreateActivity.do",
+                    data:{
+                        owner:owner,
+                        name:name,
+                        startDate:startDate,
+                        endDate:endDate,
+                        cost:cost,
+                        description:description
+                    },
+                    type:"post",
+                    dataType:"json",
+                    success:function (data) {
+                        if (data.code == "1") {
+                            //添加成功
+                            //关闭modal窗口
+                            $("#createActivityModal").modal("hide");
+                            //刷新市场活动列表（保留）
+
+                        } else {//data.code == "0"
+                            //添加失败
+                            alert(data.message);
+                            //modal窗口不关闭
+                            $("#createActivityModal").modal("show");//这条代码也可以不写的
+                        }
+                    }
+                });
+
+            });
         });
 
     </script>
@@ -42,7 +116,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             </div>
             <div class="modal-body">
 
-                <form class="form-horizontal" role="form">
+                <form id="createActivityForm" class="form-horizontal" role="form">
 
                     <div class="form-group">
                         <label for="create-marketActivityOwner" class="col-sm-2 control-label">所有者<span
@@ -62,13 +136,13 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                     </div>
 
                     <div class="form-group">
-                        <label for="create-startTime" class="col-sm-2 control-label">开始日期</label>
+                        <label for="create-startDate" class="col-sm-2 control-label">开始日期</label>
                         <div class="col-sm-10" style="width: 300px;">
-                            <input type="text" class="form-control" id="create-startTime">
+                            <input type="text" class="form-control" id="create-startDate">
                         </div>
-                        <label for="create-endTime" class="col-sm-2 control-label">结束日期</label>
+                        <label for="create-endDate" class="col-sm-2 control-label">结束日期</label>
                         <div class="col-sm-10" style="width: 300px;">
-                            <input type="text" class="form-control" id="create-endTime">
+                            <input type="text" class="form-control" id="create-endDate">
                         </div>
                     </div>
                     <div class="form-group">
@@ -79,9 +153,9 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="create-describe" class="col-sm-2 control-label">描述</label>
+                        <label for="create-description" class="col-sm-2 control-label">描述</label>
                         <div class="col-sm-10" style="width: 81%;">
-                            <textarea class="form-control" rows="3" id="create-describe"></textarea>
+                            <textarea class="form-control" rows="3" id="create-description"></textarea>
                         </div>
                     </div>
 
@@ -90,7 +164,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal">保存</button>
+                <button type="button" class="btn btn-primary" id="saveCreateActivityBtn">保存</button>
             </div>
         </div>
     </div>
@@ -250,7 +324,10 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
         <div class="btn-toolbar" role="toolbar"
              style="background-color: #F7F7F7; height: 50px; position: relative;top: 5px;">
             <div class="btn-group" style="position: relative; top: 18%;">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createActivityModal">
+                <button type="button" class="btn btn-primary"
+<%--                        不通过data-toggle和data-target弹出modal框，使用jquery的id选择器绑定单击事件--%>
+<%--                        data-toggle="modal" data-target="#createActivityModal"--%>
+                        id="createActivityBtn">
                     <span class="glyphicon glyphicon-plus"></span> 创建
                 </button>
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#editActivityModal"><span
