@@ -9,11 +9,11 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
     <base href="<%=basePath%>">
 
     <link href="jquery/bootstrap_3.3.0/css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
-    <link href="jquery/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" type="text/css"
-          rel="stylesheet"/>
+    <link href="jquery/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" type="text/css" rel="stylesheet"/>
 
     <script type="text/javascript" src="jquery/jquery-1.11.1-min.js"></script>
     <script type="text/javascript" src="jquery/bootstrap_3.3.0/js/bootstrap.min.js"></script>
+    <%--    引入bootstrap_datetimepicker插件，之前已经引入它依赖的jquery和bootstrap了，只有js存在引入顺序哦--%>
     <script type="text/javascript"
             src="jquery/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.js"></script>
     <script type="text/javascript"
@@ -34,6 +34,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                 $("#createActivityModal").modal("show");
             });
 
+            //给"保存"按钮绑定单击事件，提交表单，发异步请求
             $("#saveCreateActivityBtn").click(function () {
                 //1、收集表单中填入的参数
                 let owner = $("#create-marketActivityOwner").val();
@@ -98,6 +99,19 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                 });
 
             });
+
+            //当容器加载完成后，对容器调用工具函数，但是现在有俩容器
+            //所以考虑使用类选择器等
+            $(".show-calendar").datetimepicker({
+                language: 'zh-CN', //语言
+                format: 'yyyy-mm-dd', //format of date
+                minView: 'month', //可以选择到的最小视图，这里是选择一个月中的哪一天
+                initialDate: new Date(), //打开后的默认显示的日期，一般逻辑就是今天
+                autoclose: 'true', //选择完最后一层后是否关闭，默认为false
+                todayBtn: 'true', //是否显示"今天"按钮，默认为false
+                clearBtn: 'true' //是否显示"清空"按钮，默认为false
+            });
+
         });
 
     </script>
@@ -138,11 +152,11 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                     <div class="form-group">
                         <label for="create-startDate" class="col-sm-2 control-label">开始日期</label>
                         <div class="col-sm-10" style="width: 300px;">
-                            <input type="text" class="form-control" id="create-startDate">
+                            <input type="text" class="form-control show-calendar" id="create-startDate">
                         </div>
                         <label for="create-endDate" class="col-sm-2 control-label">结束日期</label>
                         <div class="col-sm-10" style="width: 300px;">
-                            <input type="text" class="form-control" id="create-endDate">
+                            <input type="text" class="form-control show-calendar" id="create-endDate">
                         </div>
                     </div>
                     <div class="form-group">
@@ -189,6 +203,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                                 style="font-size: 15px; color: red;">*</span></label>
                         <div class="col-sm-10" style="width: 300px;">
                             <select class="form-control" id="edit-marketActivityOwner">
+<%--                                使用jstl标签，对request作用域中传入的list进行遍历--%>
                                 <c:forEach items="${requestScope.userList}" var="u">
                                     <option value="${u.id}">${u.name}</option>
                                 </c:forEach>
