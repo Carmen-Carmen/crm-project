@@ -8,16 +8,17 @@ import com.lingrui.crm.settings.domain.User;
 import com.lingrui.crm.settings.service.UserService;
 import com.lingrui.crm.workbench.domain.Activity;
 import com.lingrui.crm.workbench.service.ActivityService;
+import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @ Description
@@ -84,5 +85,45 @@ public class ActivityController {
 
 
         return objectForReturn;
+    }
+    
+    @RequestMapping("/workbench/activity/queryActivityByConditionForPage.do")
+    @ResponseBody
+    public Object queryActivityByConditionForPage(
+//            //查询条件
+//            @RequestParam("name") String name,
+//            @RequestParam("owner") String owner,
+//            @RequestParam("startDate") String startDate,
+//            @RequestParam("endDate") String endDate,
+//            //分页条件
+//            @RequestParam("pageNo") int pageNo,
+//            @RequestParam("pageSize") int pageSize
+            String name,
+            String owner,
+            String startDate,
+            String endDate,
+            int pageNo,
+            int pageSize
+    ) {
+        //封装参数，key要和sql语句中占位符的一致
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", name);
+        map.put("owner", owner);
+        map.put("startDate", startDate);
+        map.put("endDate", endDate);
+        map.put("pageNo", pageNo);
+        map.put("pageSize", pageSize);
+        map.put("beginNo", (pageNo - 1) * pageSize);//计算出开始显示的条数，作为sql语句中limit的第一个参数
+
+        //调用service，获取数据
+        List<Activity> activityList = activityService.queryActivityByConditionForPage(map);
+        int totalRows = activityService.queryCountOfActivityByCondition(map);
+
+        //根据查询结果，生成响应信息
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("activityList", activityList);
+        resultMap.put("totalRows", totalRows);
+
+        return resultMap;
     }
 }

@@ -112,8 +112,66 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                 clearBtn: 'true' //是否显示"清空"按钮，默认为false
             });
 
+            //当市场活动主页面加载加载完成，查询所有数据的第一页以及所有数据的总条数，默认每页显示10条数据
+            queryActivityByConditionForPage();//在入口函数外封装成一个方法
+
+            //为"查询"按钮绑定单击事件
+            $("#queryActivityBtn").click(function () {
+                queryActivityByConditionForPage()
+            });
+
         });
 
+        //在入口函数外面封装函数
+        function queryActivityByConditionForPage(pageNo, pageSize) {
+            //收集参数：对于查询参数，不会涉及修改数据库，因此不需要trim()前后空格
+            let name = $("#query-name").val();
+            let owner = $("#query-owner").val();
+            let startDate = $("#query-startDate").val();
+            let endDate = $("#query-endDate").val();
+            //分页信息用改为用参数传进来
+            // let pageNo = 1;
+            // let pageSize = 10;
+
+            console.log(startDate + "\n" + endDate)
+
+            //发送异步请求
+            $.ajax({
+                url: "workbench/activity/queryActivityByConditionForPage.do",
+                data: {
+                    name: name,
+                    owner: owner,
+                    startDate: startDate,
+                    endDate: endDate,
+                    pageNo: pageNo,
+                    pageSize: pageSize
+                },
+                type: 'post',
+                dataType: 'json',
+                success: function(data) {
+                    //data的json内容，包含List activityList和int totalRows
+                    //1、显示总条数
+                    let totalRows = data.totalRows;
+                    $("#totalRowsB").text(totalRows);//给这个b标签的text赋值
+                    //2、遍历activityList，*拼接*所有行的数据，使用jquery的遍历
+                    let htmlStr = "";//存放每一行拼接的html代码
+                    //俩参数，第一个参数是要遍历的list，第二个是要做啥，即一个function
+                    $.each(data.activityList, function (index, obj) {//回掉函数的俩参数，第一个是下标，第二个是拿到的list中的具体对象
+                        //在方法体中this和参数obj作用一致：一般来说，简单的用this，复杂对象用obj
+                        htmlStr += "<tr class=\"active\">";
+                        htmlStr += "<td><input type=\"checkbox\" value=\"" + obj.id +"\" /></td>"//为方便checkbox后续的修改、删除操作，先把这行数据的id绑定给它
+                        htmlStr += "<td><a style=\"text-decoration: none; cursor: pointer;"
+                        htmlStr += "onclick=\"window.location.href='detail.html';\">" + obj.name + "</a></td>"
+                        htmlStr += "<td>" + obj.owner + "</td>"
+                        htmlStr += "<td>" + obj.startDate + "</td>"
+                        htmlStr += "<td>" + obj.endDate + "</td>"
+                        htmlStr += "</tr>"
+                    })
+                    // 然后找到table标签的jquery对象，把htmlStr填入它的html，注意是html不是text！
+                    $("#activity-tbody").html(htmlStr);//使用html的覆盖显示，而不是append的追加显示，不然点一次查询就会多几行，前面数据不会清掉
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -307,14 +365,14 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">名称</div>
-                        <input class="form-control" type="text">
+                        <input class="form-control" type="text" id="query-name">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">所有者</div>
-                        <input class="form-control" type="text">
+                        <input class="form-control" type="text" id="query-owner">
                     </div>
                 </div>
 
@@ -322,17 +380,17 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">开始日期</div>
-                        <input class="form-control" type="text" id="startTime"/>
+                        <input class="form-control show-calendar" type="text" id="query-startDate" />
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">结束日期</div>
-                        <input class="form-control" type="text" id="endTime">
+                        <input class="form-control  show-calendar" type="text" id="query-endDate" />
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-default">查询</button>
+                <button type="button" class="btn btn-default" id="queryActivityBtn">查询</button>
 
             </form>
         </div>
@@ -373,30 +431,32 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                     <td>结束日期</td>
                 </tr>
                 </thead>
-                <tbody>
-                <tr class="active">
-                    <td><input type="checkbox"/></td>
-                    <td><a style="text-decoration: none; cursor: pointer;"
-                           onclick="window.location.href='detail.html';">发传单</a></td>
-                    <td>zhangsan</td>
-                    <td>2020-10-10</td>
-                    <td>2020-10-20</td>
-                </tr>
-                <tr class="active">
-                    <td><input type="checkbox"/></td>
-                    <td><a style="text-decoration: none; cursor: pointer;"
-                           onclick="window.location.href='detail.html';">发传单</a></td>
-                    <td>zhangsan</td>
-                    <td>2020-10-10</td>
-                    <td>2020-10-20</td>
-                </tr>
+                <tbody id="activity-tbody">
+<%--                写死的市场活动列表--%>
+<%--                <tr class="active">--%>
+<%--                    <td><input type="checkbox"/></td>--%>
+<%--                    <td><a style="text-decoration: none; cursor: pointer;"--%>
+<%--                           onclick="window.location.href='detail.html';">发传单</a></td>--%>
+<%--                    <td>zhangsan</td>--%>
+<%--                    <td>2020-10-10</td>--%>
+<%--                    <td>2020-10-20</td>--%>
+<%--                </tr>--%>
+<%--                <tr class="active">--%>
+<%--                    <td><input type="checkbox"/></td>--%>
+<%--                    <td><a style="text-decoration: none; cursor: pointer;"--%>
+<%--                           onclick="window.location.href='detail.html';">发传单</a></td>--%>
+<%--                    <td>zhangsan</td>--%>
+<%--                    <td>2020-10-10</td>--%>
+<%--                    <td>2020-10-20</td>--%>
+<%--                </tr>--%>
                 </tbody>
             </table>
         </div>
 
         <div style="height: 50px; position: relative;top: 30px;">
             <div>
-                <button type="button" class="btn btn-default" style="cursor: default;">共<b>50</b>条记录</button>
+<%--                                                                    b标签是加粗用的哦--%>
+                <button type="button" class="btn btn-default" style="cursor: default;">共<b id="totalRowsB">50</b>条记录</button>
             </div>
             <div class="btn-group" style="position: relative;top: -34px; left: 110px;">
                 <button type="button" class="btn btn-default" style="cursor: default;">显示</button>
