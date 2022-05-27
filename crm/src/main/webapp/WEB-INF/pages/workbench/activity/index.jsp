@@ -1,7 +1,7 @@
 <%@page contentType="text/html; charset=UTF-8" language="java" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/";
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/";
 %>
 <html>
 <head>
@@ -10,6 +10,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 
     <link href="jquery/bootstrap_3.3.0/css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
     <link href="jquery/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.min.css" type="text/css" rel="stylesheet"/>
+    <link rel="stylesheet" href="jquery/bs_pagination-master/css/jquery.bs_pagination.min.css">
 
     <script type="text/javascript" src="jquery/jquery-1.11.1-min.js"></script>
     <script type="text/javascript" src="jquery/bootstrap_3.3.0/js/bootstrap.min.js"></script>
@@ -18,6 +19,11 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             src="jquery/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.js"></script>
     <script type="text/javascript"
             src="jquery/bootstrap-datetimepicker-master/locale/bootstrap-datetimepicker.zh-CN.js"></script>
+
+    <%--    引入bs_pagination插件--%>
+
+    <script type="text/javascript" src="jquery/bs_pagination-master/js/jquery.bs_pagination.min.js"></script>
+    <script type="text/javascript" src="jquery/bs_pagination-master/localization/en.js"></script>
 
     <script type="text/javascript">
         //入口函数
@@ -87,7 +93,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                             //添加成功
                             //关闭modal窗口
                             $("#createActivityModal").modal("hide");
-                            //刷新市场活动列表（保留）
+                            //刷新市场活动列表，显示列表第一页，并保留每页显示条数
+                            queryActivityByConditionForPage(1, $("#paginationContainer").bs_pagination('getOption', 'rowsPerPage'));
 
                         } else {//data.code == "0"
                             //添加失败
@@ -113,27 +120,93 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             });
 
             //当市场活动主页面加载加载完成，查询所有数据的第一页以及所有数据的总条数，默认每页显示10条数据
-            queryActivityByConditionForPage();//在入口函数外封装成一个方法
+            queryActivityByConditionForPage(1, 10);
 
             //为"查询"按钮绑定单击事件
             $("#queryActivityBtn").click(function () {
-                queryActivityByConditionForPage()
+                //查询符合条件的所有数据的第一页数据
+                //但是希望保留查询前每页显示条数
+                //调用工具函数中返回pagination各种参数的函数
+                let currentPageSize = $("#paginationContainer").bs_pagination('getOption', 'rowsPerPage');
+                queryActivityByConditionForPage(1, currentPageSize)
             });
 
-        });
+            //给"全选"按钮添加单击事件
+            $("#selectAll").click(function () {
+                let selectAllChecked = this.checked;//事件函数中的内置对象this就代表当前事件发生对象的dom对象
+                //jquery选择器和css选择器一模一样
+                $("#activity-tbody input[type='checkbox']").prop("checked", this.checked);//将"全选"选框的选中状态同步给列表中所有checkbox
+            });
 
-        //在入口函数外面封装函数
+            //给列表中所有checkbox添加单击事件
+            //有一个问题，列表中的checkbox是ajax请求成功后动态创建的，jquery选择器.xxx.()的方法加不了
+            //使用on函数添加事件！
+            $("#activity-tbody").on("click", "input[type='checkbox']", function () {
+                //jquery选择器获取当前列表中所有被选中的checkbox，成为一个数组；这个数组有length属性，也可以用size()
+                let checkedNum = $("#activity-tbody input[type='checkbox']:checked").size();
+
+                //与当前页面所有checkbox的jquery对象数组长度比较
+                if ($("#activity-tbody input[type='checkbox']").size() == checkedNum) {
+                    $("#selectAll").prop("checked", true);
+                } else {
+                    $("#selectAll").prop("checked", false);
+                }
+            });
+
+            //为"删除"按钮添加单击事件
+            $("#deleteActivityBtn").click(function () {
+                //收集参数
+                //获取列表中所有被选中的checkbox，生成一个数组
+                let checkedIds = $("#activity-tbody input[type='checkbox']:checked");
+
+                //如果没有选中任何记录，则提示，且不发送请求
+                if (checkedIds.size() == 0) {
+                    alert("请选择要删除的市场活动！")
+                    return;
+                }
+
+                //遍历id列表，拼成id=xxx&id=xxx&...&id=xxx的字符串
+                let ids = "";
+                $.each(checkedIds, function () {
+                    //用dom对象即可，没必要传入index和obj的jquery参数
+                    ids += "id=" + this.value + "&";
+                })
+                // ids = ids.substr(0, ids.length - 1);//substr是从startIndex开始，往后取n个
+                // ids += "id=15&";//故意让前台和后台id不符，确实能被controller catch到这个错误
+                ids = ids.substring(0, ids.length - 1);//去除多余的&
+
+                if (window.confirm("是否确定删除" + checkedIds.size() + "条数据?")) {
+                    $.ajax({
+                        url: "workbench/activity/deleteActivityByIds.do",
+                        data: ids,
+                        type: "post",
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.code == "1") {
+                                //删除成功
+                                //刷新市场活动列表，显示第一页数据，                             并且保持每页显示条数不变
+                                queryActivityByConditionForPage(1, $("#paginationContainer").bs_pagination("getOption", "rowsPerPage"));
+                            } else {
+                                //提示信息
+                                alert(data.message);
+                            }
+                        }
+                    });
+                }
+            });
+
+        });//入口函数的屁股
+
+        //在*入口函数外面*封装函数
         function queryActivityByConditionForPage(pageNo, pageSize) {
             //收集参数：对于查询参数，不会涉及修改数据库，因此不需要trim()前后空格
             let name = $("#query-name").val();
             let owner = $("#query-owner").val();
             let startDate = $("#query-startDate").val();
             let endDate = $("#query-endDate").val();
-            //分页信息用改为用参数传进来
+            //分页信息用改为用参数传进来，更符合需求
             // let pageNo = 1;
             // let pageSize = 10;
-
-            console.log(startDate + "\n" + endDate)
 
             //发送异步请求
             $.ajax({
@@ -153,7 +226,31 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                     //1、显示总条数
                     let totalRows = data.totalRows;
                     $("#totalRowsB").text(totalRows);//给这个b标签的text赋值
-                    //2、遍历activityList，*拼接*所有行的数据，使用jquery的遍历
+
+                    //把计算总页数的代码扔到后端去吧，太累了
+                    //2、为分页插件的容器调用工具函数（这个时候容器一定加载完了！
+                    $("#paginationContainer").bs_pagination({
+                        currentPage: pageNo,
+
+                        totalRows: data.totalRows,
+                        rowsPerPage: pageSize,
+                        totalPages: data.totalPages,
+
+                        visiblePageLinks: 5,
+
+                        showGoToPage: false,
+                        showRowsPerPage: true,
+                        showRowsInfo: true,
+
+                        onChangePage: function (event, pageObj) {
+                            //当翻页或者每页行数变化时，再执行一次发送ajax请求和渲染分页、列表的操作
+                            //传入的两个参数分别是翻到的页码和更新后的每页行数
+                            queryActivityByConditionForPage(pageObj.currentPage, pageObj.rowsPerPage)
+                            //并不是没有递归终点的死循环哦，只有变化的时候才会执行
+                        }
+                    });
+
+                    //3、遍历activityList，*拼接*所有行的数据，使用jquery的遍历
                     let htmlStr = "";//存放每一行拼接的html代码
                     //俩参数，第一个参数是要遍历的list，第二个是要做啥，即一个function
                     $.each(data.activityList, function (index, obj) {//回掉函数的俩参数，第一个是下标，第二个是拿到的list中的具体对象
@@ -169,6 +266,9 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                     })
                     // 然后找到table标签的jquery对象，把htmlStr填入它的html，注意是html不是text！
                     $("#activity-tbody").html(htmlStr);//使用html的覆盖显示，而不是append的追加显示，不然点一次查询就会多几行，前面数据不会清掉
+
+                    //4、刷新后的列表肯定是没有被选中的，应当取消全选按钮的checked属性
+                    $("#selectAll").prop("checked", false);
                 }
             });
         }
@@ -403,10 +503,13 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                         id="createActivityBtn">
                     <span class="glyphicon glyphicon-plus"></span> 创建
                 </button>
-                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#editActivityModal"><span
-                        class="glyphicon glyphicon-pencil"></span> 修改
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#editActivityModal"
+                        id="updateActivityBtn">
+                    <span class="glyphicon glyphicon-pencil"></span> 修改
                 </button>
-                <button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-minus"></span> 删除</button>
+                <button type="button" class="btn btn-danger" id="deleteActivityBtn">
+                    <span class="glyphicon glyphicon-minus" ></span> 删除
+                </button>
             </div>
             <div class="btn-group" style="position: relative; top: 18%;">
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#importActivityModal">
@@ -424,7 +527,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             <table class="table table-hover">
                 <thead>
                 <tr style="color: #B3B3B3;">
-                    <td><input type="checkbox"/></td>
+                    <td><input type="checkbox" id="selectAll"/></td>
                     <td>名称</td>
                     <td>所有者</td>
                     <td>开始日期</td>
@@ -453,41 +556,43 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             </table>
         </div>
 
-        <div style="height: 50px; position: relative;top: 30px;">
-            <div>
-<%--                                                                    b标签是加粗用的哦--%>
-                <button type="button" class="btn btn-default" style="cursor: default;">共<b id="totalRowsB">50</b>条记录</button>
-            </div>
-            <div class="btn-group" style="position: relative;top: -34px; left: 110px;">
-                <button type="button" class="btn btn-default" style="cursor: default;">显示</button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                        10
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#">20</a></li>
-                        <li><a href="#">30</a></li>
-                    </ul>
-                </div>
-                <button type="button" class="btn btn-default" style="cursor: default;">条/页</button>
-            </div>
-            <div style="position: relative;top: -88px; left: 285px;">
-                <nav>
-                    <ul class="pagination">
-                        <li class="disabled"><a href="#">首页</a></li>
-                        <li class="disabled"><a href="#">上一页</a></li>
-                        <li class="active"><a href="#">1</a></li>
-                        <li><a href="#">2</a></li>
-                        <li><a href="#">3</a></li>
-                        <li><a href="#">4</a></li>
-                        <li><a href="#">5</a></li>
-                        <li><a href="#">下一页</a></li>
-                        <li class="disabled"><a href="#">末页</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
+        <div id="paginationContainer"></div>
+<%--        分页条--%>
+<%--        <div style="height: 50px; position: relative;top: 30px;">--%>
+<%--            <div>--%>
+<%--&lt;%&ndash;                                                                    b标签是加粗用的哦&ndash;%&gt;--%>
+<%--                <button type="button" class="btn btn-default" style="cursor: default;">共<b id="totalRowsB">50</b>条记录</button>--%>
+<%--            </div>--%>
+<%--            <div class="btn-group" style="position: relative;top: -34px; left: 110px;">--%>
+<%--                <button type="button" class="btn btn-default" style="cursor: default;">显示</button>--%>
+<%--                <div class="btn-group">--%>
+<%--                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">--%>
+<%--                        10--%>
+<%--                        <span class="caret"></span>--%>
+<%--                    </button>--%>
+<%--                    <ul class="dropdown-menu" role="menu">--%>
+<%--                        <li><a href="#">20</a></li>--%>
+<%--                        <li><a href="#">30</a></li>--%>
+<%--                    </ul>--%>
+<%--                </div>--%>
+<%--                <button type="button" class="btn btn-default" style="cursor: default;">条/页</button>--%>
+<%--            </div>--%>
+<%--            <div style="position: relative;top: -88px; left: 285px;">--%>
+<%--                <nav>--%>
+<%--                    <ul class="pagination">--%>
+<%--                        <li class="disabled"><a href="#">首页</a></li>--%>
+<%--                        <li class="disabled"><a href="#">上一页</a></li>--%>
+<%--                        <li class="active"><a href="#">1</a></li>--%>
+<%--                        <li><a href="#">2</a></li>--%>
+<%--                        <li><a href="#">3</a></li>--%>
+<%--                        <li><a href="#">4</a></li>--%>
+<%--                        <li><a href="#">5</a></li>--%>
+<%--                        <li><a href="#">下一页</a></li>--%>
+<%--                        <li class="disabled"><a href="#">末页</a></li>--%>
+<%--                    </ul>--%>
+<%--                </nav>--%>
+<%--            </div>--%>
+<%--        </div>--%>
 
     </div>
 

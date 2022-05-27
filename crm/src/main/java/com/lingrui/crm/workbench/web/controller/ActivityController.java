@@ -60,7 +60,7 @@ public class ActivityController {
         //使用实体类对象作为参数，直接封装表单提交的字段成一个对象
         //1、还要封装其他参数
         activity.setId(UUIDUtils.generateUUID());//生成一个32位uuid作为id
-        activity.setCreateTime(DateUtils.formatTime(new Date()));//以当前时间转化为字符串作为创建时间
+        activity.setCreateTime(DateUtils.formatDateTime(new Date()));//以当前时间转化为字符串作为创建时间，注意需要的是日期+时间的datetime
         User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);//从session中取出当前用户
         activity.setCreateBy(sessionUser.getId());//数据库中市场活动的create_by字段理论上引用的也是用户id
 
@@ -74,13 +74,13 @@ public class ActivityController {
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
             } else {
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
-                objectForReturn.setMessage("系统忙，请稍后重试....");//不要把后台报错的理由写的太清楚
+                objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);//不要把后台报错的理由写的太清楚
             }
         } catch (Exception e) {
             e.printStackTrace();
 
             objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
-            objectForReturn.setMessage("系统忙，请稍后重试....");
+            objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
         }
 
 
@@ -90,18 +90,12 @@ public class ActivityController {
     @RequestMapping("/workbench/activity/queryActivityByConditionForPage.do")
     @ResponseBody
     public Object queryActivityByConditionForPage(
-//            //查询条件
-//            @RequestParam("name") String name,
-//            @RequestParam("owner") String owner,
-//            @RequestParam("startDate") String startDate,
-//            @RequestParam("endDate") String endDate,
-//            //分页条件
-//            @RequestParam("pageNo") int pageNo,
-//            @RequestParam("pageSize") int pageSize
+            //查询条件
             String name,
             String owner,
             String startDate,
             String endDate,
+            //分页信息
             int pageNo,
             int pageSize
     ) {
@@ -118,12 +112,37 @@ public class ActivityController {
         //调用service，获取数据
         List<Activity> activityList = activityService.queryActivityByConditionForPage(map);
         int totalRows = activityService.queryCountOfActivityByCondition(map);
+        int totalPages;//计算总页数，扔给前端
+        if (totalRows % pageSize == 0) {
+            totalPages = totalRows / pageSize;
+        } else {
+            totalPages = totalRows / pageSize + 1;
+        }
 
         //根据查询结果，生成响应信息
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("activityList", activityList);
         resultMap.put("totalRows", totalRows);
+        resultMap.put("totalPages", totalPages);
 
         return resultMap;
+    }
+
+    @RequestMapping("/workbench/activity/deleteActivityByIds.do")
+    @ResponseBody
+    public Object deleteActivityByIds(String[] id) {
+        ObjectForReturn objectForReturn = new ObjectForReturn();
+        try {
+            //调用service层方法，删除市场活动
+            int affectedRows = activityService.deleteActivityByIds(id);
+            //把判断删除条数是否与传入数组长度一致的判断放到service层，一旦出错就会被这里catch到
+            objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
+        } catch (Exception e) {
+            objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
+            objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
+            e.printStackTrace();
+        }
+
+        return objectForReturn;
     }
 }

@@ -14,4 +14,7 @@ public class Constants {
     //session中保存当前用户的，attribute中的key
     public static final String SESSION_USER = "sessionUser";
 
+    //一般错误的提示信息
+    public static final String COMMON_ERROR_MSG = "系统忙，请稍后重试...";
+
 }

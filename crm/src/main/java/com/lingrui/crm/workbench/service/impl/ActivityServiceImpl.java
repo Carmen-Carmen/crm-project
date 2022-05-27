@@ -34,4 +34,15 @@ public class ActivityServiceImpl implements ActivityService {
     public int queryCountOfActivityByCondition(Map<String, Object> map) {
         return activityMapper.selectCountOfActivityByCondition(map);
     }
+
+    @Override
+    public int deleteActivityByIds(String[] ids) {
+        int affectedRows = activityMapper.deleteActivityByIds(ids);
+        if (affectedRows == ids.length) {
+            return affectedRows;
+        } else {
+            System.out.println("111");
+            throw new RuntimeException("实际删除记录数与目标不符...");
+        }
+    }
 }

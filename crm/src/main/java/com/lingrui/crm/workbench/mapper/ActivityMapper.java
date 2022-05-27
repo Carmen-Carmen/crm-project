@@ -83,4 +83,14 @@ public interface ActivityMapper {
      * @date 2022/5/25 21:16
      */
     int selectCountOfActivityByCondition(Map<String, Object> map);
+
+    /**
+     * @param ids: 字符串数组
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 根据ids字符串数组批量删除市场活动
+     * @date 2022/5/27 20:42
+     */
+    int deleteActivityByIds(String[] ids);
 }

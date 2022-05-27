@@ -43,7 +43,7 @@
     </script>
 </head>
 <body>
-<input type="text" id="myDate" readonly>
+<input type="text" id="myDate" readonly style="position: absolute; left: 0; right: 0; margin-left: auto; margin-right: auto; margin-top: 100px;">
 
 </body>
 </html>

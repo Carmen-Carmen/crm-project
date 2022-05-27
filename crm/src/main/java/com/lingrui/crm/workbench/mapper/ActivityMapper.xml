@@ -281,4 +281,14 @@
             </if>
         </where>
     </select>
+
+<!--    int deleteActivityByIds(String[] ids);          这里不能写resultType！默认会返回int的-->
+    <delete id="deleteActivityByIds" parameterType="string">
+        DELETE FROM tbl_activity
+        WHERE id IN
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+                <!--表示遍历的集合类型为数组     用,隔开，并且会自动除掉最后一个逗号-->
+            #{id}
+        </foreach>
+    </delete>
 </mapper>
