@@ -93,4 +93,24 @@ public interface ActivityMapper {
      * @date 2022/5/27 20:42
      */
     int deleteActivityByIds(String[] ids);
+
+    /**
+     * @param id:
+     * @return Activity
+     * @author xulingrui
+     * @description TODO
+     * 根据id查询市场活动详细信息
+     * @date 2022/5/28 17:10
+     */
+    Activity selectActivityById(String id);
+
+    /**
+     * @param activity: 封装为Activity实体类对象的参数
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 保存修改过后的市场活动
+     * @date 2022/5/28 18:06
+     */
+    int updateActivity(Activity activity);
 }

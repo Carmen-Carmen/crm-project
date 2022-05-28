@@ -35,6 +35,15 @@ public class ActivityServiceImpl implements ActivityService {
         return activityMapper.selectCountOfActivityByCondition(map);
     }
 
+    /**
+     * @param ids:
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 根据数据库返回的受影响行数，判断实际删除的是否与要求删除的条数符合
+     * 若不符合则抛出异常，事务回滚
+     * @date 2022/5/28 17:16
+     */
     @Override
     public int deleteActivityByIds(String[] ids) {
         int affectedRows = activityMapper.deleteActivityByIds(ids);
@@ -44,5 +53,15 @@ public class ActivityServiceImpl implements ActivityService {
             System.out.println("111");
             throw new RuntimeException("实际删除记录数与目标不符...");
         }
+    }
+
+    @Override
+    public Activity queryActivityById(String id) {
+        return activityMapper.selectActivityById(id);
+    }
+
+    @Override
+    public int saveEditActivity(Activity activity) {
+        return activityMapper.updateActivity(activity);
     }
 }
