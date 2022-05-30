@@ -313,4 +313,31 @@
             edit_by = #{editBy}
         where id = #{id};
     </update>
+
+<!--    List<Activity> selectAllActivity();输出到excel里的user id外键应查出人名来！使用联合查询-->
+    <select id="selectAllActivity" resultMap="BaseResultMap">
+        SELECT a.id, owner.name AS owner, a.name, a.start_date, a.end_date, a.cost, a.description,
+               a.create_time, creator.name AS create_by, a.edit_time, editor.name AS edit_by
+        FROM tbl_activity AS a
+        JOIN tbl_user AS owner ON a.owner = owner.id
+        JOIN tbl_user AS creator ON a.create_by = creator.id
+        LEFT JOIN tbl_user AS editor ON a.edit_by = editor.id
+        ORDER BY a.create_time DESC
+    </select>
+
+<!--    List<Activity> selectActivityByIds(String[] ids);-->
+    <select id="selectActivityByIds" parameterType="string" resultMap="BaseResultMap">
+        SELECT a.id, owner.name AS owner, a.name, a.start_date, a.end_date, a.cost, a.description,
+               a.create_time, creator.name AS create_by, a.edit_time, editor.name AS edit_by
+        FROM tbl_activity AS a
+                 JOIN tbl_user AS owner ON a.owner = owner.id
+                 JOIN tbl_user AS creator ON a.create_by = creator.id
+                 LEFT JOIN tbl_user AS editor ON a.edit_by = editor.id
+        WHERE a.id IN
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            <!--表示遍历的集合类型为数组     用,隔开，并且会自动除掉最后一个逗号-->
+            #{id}
+        </foreach>
+        ORDER BY a.create_time DESC
+    </select>
 </mapper>

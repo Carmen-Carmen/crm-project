@@ -50,11 +50,11 @@ public class MVCTest {
 
     @Test
     public void testDeleteActivityByIds() throws Exception {
-        String json = mockMvc.perform(MockMvcRequestBuilders.post("/workbench/activity/deleteActivityByIds.do?id=1&id=2")).andDo(print()).andReturn().getResponse().getContentAsString();
-
-        JsonFactory jsonFactory = new JsonFactory();
-        JsonParser parser = jsonFactory.createParser(json);
-        JsonToken jsonToken = parser.nextToken();
-        System.out.println(jsonToken);
+//        String json = mockMvc.perform(MockMvcRequestBuilders.post("/workbench/activity/deleteActivityByIds.do?id=1&id=2")).andDo(print()).andReturn().getResponse().getContentAsString();
+//
+//        JsonFactory jsonFactory = new JsonFactory();
+//        JsonParser parser = jsonFactory.createParser(json);
+//        JsonToken jsonToken = parser.nextToken();
+//        System.out.println(jsonToken);
     }
 }

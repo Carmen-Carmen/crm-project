@@ -303,6 +303,34 @@
 
             });
 
+            //给"批量导出"按钮添加单击事件
+            $("#exportAllActivityBtn").click(function () {
+                //向后台发送文件下载的请求
+                window.location.href = "workbench/activity/exportAllActivity.do";
+            });
+
+            //给"选择导出"按钮添加单击事件
+            $("#exportSelectedActivityBtn").click(function () {
+                //收集数据
+                let checkedIds = $("#activity-tbody input[type='checkbox']:checked");
+
+                if (checkedIds.size() == 0) {
+                    alert("请选择要导出的市场活动！");
+                    return;
+                }
+
+                //拼接请求参数字符串
+                let ids = "";
+                $.each(checkedIds, function () {
+                    //用dom对象即可，没必要传入index和obj的jquery参数
+                    ids += "id=" + this.value + "&";
+                })
+                ids = ids.substring(0, ids.length - 1);
+
+                //发送请求
+                window.location.href = "workbench/activity/exportSelectedActivity.do?" + ids;
+            });
+
         });//入口函数的屁股
 
         //在*入口函数外面*封装函数
@@ -624,10 +652,10 @@
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#importActivityModal">
                     <span class="glyphicon glyphicon-import"></span> 上传列表数据（导入）
                 </button>
-                <button id="exportActivityAllBtn" type="button" class="btn btn-default"><span
+                <button id="exportAllActivityBtn" type="button" class="btn btn-default"><span
                         class="glyphicon glyphicon-export"></span> 下载列表数据（批量导出）
                 </button>
-                <button id="exportActivityXzBtn" type="button" class="btn btn-default"><span
+                <button id="exportSelectedActivityBtn" type="button" class="btn btn-default"><span
                         class="glyphicon glyphicon-export"></span> 下载列表数据（选择导出）
                 </button>
             </div>

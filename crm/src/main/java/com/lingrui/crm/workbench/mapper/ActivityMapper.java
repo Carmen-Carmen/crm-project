@@ -113,4 +113,24 @@ public interface ActivityMapper {
      * @date 2022/5/28 18:06
      */
     int updateActivity(Activity activity);
+
+    /**
+     * @param :
+     * @return List<Activity>
+     * @author xulingrui
+     * @description TODO
+     * 从数据库中查询所有的市场活动，用于"批量导出市场活动"功能
+     * @date 2022/5/30 14:46
+     */
+    List<Activity> selectAllActivity();
+
+    /**
+     * @param ids:
+     * @return List<Activity>
+     * @author xulingrui
+     * @description TODO
+     * 根据ids字符串数组查询市场活动
+     * @date 2022/5/30 16:32
+     */
+    List<Activity> selectActivityByIds(String[] ids);
 }

@@ -17,4 +17,6 @@ public class Constants {
     //一般错误的提示信息
     public static final String COMMON_ERROR_MSG = "系统忙，请稍后重试...";
 
+    //服务器生成的文件存储位置
+    public static final String SERVER_FILE_PATH = "/Users/xulingrui/Desktop/java_learning/CRM_project/serverDir/";
 }

@@ -3,12 +3,16 @@ package com.lingrui.crm.workbench.web.controller;
 import com.lingrui.crm.common.constants.Constants;
 import com.lingrui.crm.common.domain.ObjectForReturn;
 import com.lingrui.crm.common.utils.DateUtils;
+import com.lingrui.crm.common.utils.POIUtils;
 import com.lingrui.crm.common.utils.UUIDUtils;
 import com.lingrui.crm.settings.domain.User;
 import com.lingrui.crm.settings.service.UserService;
 import com.lingrui.crm.workbench.domain.Activity;
 import com.lingrui.crm.workbench.service.ActivityService;
 import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +20,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -231,5 +239,115 @@ public class ActivityController {
         }
 
         return objectForReturn;
+    }
+
+    /**
+     * @param response:
+     * @return void
+     * @author xulingrui
+     * @description TODO
+     * 处理前端的测试页面filedownloadtest.jsp发来文件下载请求的控制器方法
+     * @date 2022/5/30 15:00
+     */
+    @RequestMapping("/workbench/activity/fileDownload.do")
+    public void fileDownload(HttpServletResponse response) throws IOException {
+        //1、设置响应类型
+        response.setContentType("application/octet-stream;charset=UTF-8");
+        //application/octet-stream是应用程序文件的默认值。意思是未知的应用程序文件 ，浏览器一般不会自动执行或询问执行。
+        // 浏览器会像对待，设置了HTTP头Content-Disposition 值为 attachment 的文件一样来对待这类文件，即浏览器会触发下载行为。
+
+        //不设置这个响应头信息的话，浏览器会自动调用能开启这类文件的软件，实在找不到才会以附件形式下载
+        response.addHeader("Content-Disposition", "attachment;filename=" + "download.xls");//告知浏览器以附件形式打开，即下载！
+
+        //2、获取输出流，相当于在后端和前端建立了一条管道
+//        PrintWriter writer = response.getWriter();//这个输出流是字符流，只能写字符！
+        ServletOutputStream sos = response.getOutputStream();
+
+        //3、从服务器本地读取要发给前端的文件
+        File file = new File("/Users/xulingrui/Downloads/output.xls");
+        FileInputStream fis = new FileInputStream(file);
+        byte[] buffer = new byte[256];
+        int len = 0;
+        while ((len = fis.read(buffer)) != -1) {
+        //4、写出
+            sos.write(buffer);
+        }
+
+        //5、关闭资源
+        //规则：谁new的谁关
+        fis.close();//FileInputStream是我自己开启的，我自己关
+        sos.flush();//ServletOutputStream是tomcat开启的，tomcat自己会关的；flush一下，把缓存区的内容输出
+    }
+
+    /**
+     * @param response: 利用response的outputStream传输文件
+     * @return void     因此返回值为void
+     * @author xulingrui
+     * @description TODO
+     * 处理"批量导出市场活动"的控制器方法
+     * 异常直接都抛出就行了
+     * @date 2022/5/30 15:02
+     */
+    @RequestMapping("/workbench/activity/exportAllActivity.do")
+    public void exportAllActivity(HttpServletResponse response) throws Exception{
+        //1、调用service层方法，查询所有市场活动
+        List<Activity> activityList = activityService.queryAllActivity();
+
+        //2、创建excel文件
+        HSSFWorkbook workbook = null;
+        workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表");
+        if (workbook == null) return;//没有查出任何数据时
+
+//        //3、将excel文件生成在服务器端
+//        String fileName = UUIDUtils.generateUUID() + ".xls";
+//        FileOutputStream fos = new FileOutputStream(Constants.SERVER_FILE_PATH + fileName);
+//        workbook.write(fos);
+//        //关闭资源
+//        fos.close();
+//        workbook.close();//workbook也是一个流资源！
+//
+//        //4、把生成的excel文件下载到客户端
+//        response.setContentType("application/octet-stream;charset=UTF-8");//设置响应类型为应用程序文件
+//        response.addHeader("Content-Disposition", "attachment;filename=export.xls");//设置客户端拿到文件之后的处置方式为：以附件形式下载
+//        ServletOutputStream out = response.getOutputStream();
+//        //从服务器中读取刚生成的excel文件，并通过ServletOutputStream写出
+//        FileInputStream fis = new FileInputStream(Constants.SERVER_FILE_PATH + fileName);
+//        byte[] buffer = new byte[256];
+//        int len = 0;
+//        while ((len = fis.read(buffer)) != -1) {
+//        //写出
+//            out.write(buffer);
+//        }
+//        //关闭资源
+//        fis.close();
+//        //刷新ServletOutputStream，冲出缓存区中数据
+//        out.flush();
+
+        //其实根本没有必要把workbook写到服务器磁盘上
+        //3、将内存中的workbook直接写出到ServletOutputStream；内存 --> 内存，效率显著提高
+        response.setContentType("application/octet-stream;charset=UTF-8");//设置响应类型为应用程序文件
+        response.addHeader("Content-Disposition", "attachment;filename=export.xls");//设置客户端拿到文件之后的处置方式为：以附件形式下载
+        ServletOutputStream out = response.getOutputStream();
+        workbook.write(out);
+        //资源的后续处置
+        out.flush();
+        workbook.close();
+    }
+
+    @RequestMapping("/workbench/activity/exportSelectedActivity.do")
+    public void exportSelectedActivity(String[] id, HttpServletResponse response) throws Exception {
+        //1、获取市场活动数据
+        List<Activity> activityList = activityService.queryActivityByIds(id);
+
+        //2、生成workbook
+        HSSFWorkbook workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表");
+
+        //3、写出到客户端
+        response.setContentType("application/octet-stream;charset=UTF-8");//设置响应类型为应用程序文件
+        response.addHeader("Content-Disposition", "attachment;filename=export.xls");//设置客户端拿到文件之后的处置方式为：以附件形式下载
+        ServletOutputStream out = response.getOutputStream();
+        workbook.write(out);
+        out.flush();
+        workbook.close();
     }
 }
