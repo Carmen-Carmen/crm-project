@@ -36,6 +36,19 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     /**
+     * @param map:
+     * @return List<Activity>
+     * @author xulingrui
+     * @description TODO
+     * 查询所有符合条件市场活动的方法
+     * @date 2022/6/1 16:38
+     */
+    @Override
+    public List<Activity> queryActivityByCondition(Map<String, Object> map) {
+        return activityMapper.selectActivityByCondition(map);
+    }
+
+    /**
      * @param ids:
      * @return int
      * @author xulingrui

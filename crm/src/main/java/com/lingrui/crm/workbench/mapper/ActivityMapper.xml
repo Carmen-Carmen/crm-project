@@ -252,6 +252,37 @@
         limit #{beginNo}, #{pageSize}
     </select>
 
+<!--    List<Activity> selectActivityByCondition(Map<String, Object> map);-->
+    <select id="selectActivityByCondition" parameterType="map" resultMap="BaseResultMap">
+        select a.id, u1.name AS owner, a.name, a.start_date, a.end_date,
+        a.cost, a.description, a.create_time, u2.name AS create_by, a.edit_time,
+        u3.name AS edit_by
+        from tbl_activity AS a
+        JOIN tbl_user AS u1
+        on a.owner = u1.id
+        JOIN tbl_user AS u2
+        ON a.create_by = u2.id
+        LEFT JOIN tbl_user AS u3
+        ON a.edit_by = u3.id
+        <where>
+            <if test="name != null and name != ''">
+                and a.name like '%' #{name} '%'
+            </if>
+            <if test="owner != null and owner != ''">
+                and u1.name like '%' #{owner} '%'
+            </if>
+            <if test="startDate != null and startDate != ''">
+                <!--and a.start_date >= #{startDate}使用转义符，避免左右尖括号在xml中冲突-->
+                and a.start_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                <!--and #{endDate} >= a.endDate-->
+                and a.end_date &lt;= #{endDate}
+            </if>
+        </where>
+        order by a.create_time desc
+    </select>
+
 <!--    int selectCountOfActivityByCondition(Map<String, Object> map);-->
 <!--    返回值类型，resultType为整型-->
 <!--    也必须是多表查询，才能把查询条件顺利传进去哦！-->

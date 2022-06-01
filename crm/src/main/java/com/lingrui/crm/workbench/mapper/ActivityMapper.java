@@ -76,6 +76,16 @@ public interface ActivityMapper {
     List<Activity> selectActivityByConditionForPage(Map<String, Object> map);
 
     /**
+     * @param map: 以map形式存储查询条件
+     * @return List<Activity>
+     * @author xulingrui
+     * @description TODO
+     * 查询所有符合条件的市场活动；分页交给PageHelper来做
+     * @date 2022/5/25 21:16
+     */
+    List<Activity> selectActivityByCondition(Map<String, Object> map);
+
+    /**
      * @param map:以map形式存储查询条件
      * @return int
      * @author xulingrui

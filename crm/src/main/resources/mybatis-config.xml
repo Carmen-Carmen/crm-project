@@ -3,13 +3,25 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+
     <settings>
         <setting name="logImpl" value="STDOUT_LOGGING"/>
     </settings>
+
     <typeAliases>
         <package name="com.bjpowernode.crm.model"/>
     </typeAliases>
+
+    <!--    在mybatis全局配置文件中配置分页插件-->
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!--            设置分页合理化，即使点到第一页前，也只查第一页-->
+            <property name="reasonable" value="true"/>
+        </plugin>
+    </plugins>
+
     <mappers>
         <package name="com.bjpowernode.crm.mapper"/>
     </mappers>
+
 </configuration>

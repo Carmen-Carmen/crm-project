@@ -1,5 +1,7 @@
 package com.lingrui.crm.workbench.web.controller;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.lingrui.crm.common.constants.Constants;
 import com.lingrui.crm.common.domain.ObjectForReturn;
 import com.lingrui.crm.common.utils.DateUtils;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -109,12 +112,13 @@ public class ActivityController {
      * @param owner:
      * @param startDate:
      * @param endDate:
-     * @param pageNo:
-     * @param pageSize:
+     * @param pageNo:要查询的页码
+     * @param pageSize:每页显示条数
      * @return Object
      * @author xulingrui
      * @description TODO
      * 分页，按条件查询出市场活动列表
+     * 2022/6/1，改为使用PageHelper控制分页查询
      * @date 2022/5/28 18:17
      */
     @RequestMapping("/workbench/activity/queryActivityByConditionForPage.do")
@@ -135,25 +139,29 @@ public class ActivityController {
         map.put("owner", owner);
         map.put("startDate", startDate);
         map.put("endDate", endDate);
-        map.put("pageNo", pageNo);
-        map.put("pageSize", pageSize);
-        map.put("beginNo", (pageNo - 1) * pageSize);//计算出开始显示的条数，作为sql语句中limit的第一个参数
+        //使用PageHelper后就不需要手动limit分页了
+//        map.put("pageNo", pageNo);
+//        map.put("pageSize", pageSize);
+//        map.put("beginNo", (pageNo - 1) * pageSize);//计算出开始显示的条数，作为sql语句中limit的第一个参数
 
         //调用service，获取数据
-        List<Activity> activityList = activityService.queryActivityByConditionForPage(map);
-        int totalRows = activityService.queryCountOfActivityByCondition(map);
-        int totalPages;//计算总页数，扔给前端
-        if (totalRows % pageSize == 0) {
-            totalPages = totalRows / pageSize;
-        } else {
-            totalPages = totalRows / pageSize + 1;
-        }
+//        List<Activity> activityList = activityService.queryActivityByConditionForPage(map);
+        PageHelper.startPage(pageNo, pageSize);//使用PageHelper控制分页查询了
+        List<Activity> activityList = activityService.queryActivityByCondition(map);
+//        int totalRows = activityService.queryCountOfActivityByCondition(map);
+//        int totalPages;//计算总页数，扔给前端
+//        if (totalRows % pageSize == 0) {
+//            totalPages = totalRows / pageSize;
+//        } else {
+//            totalPages = totalRows / pageSize + 1;
+//        }
+        PageInfo<Activity> pageInfo = new PageInfo<>(activityList, 5);//前端的pagination中设置了连续显示卡片数为5
 
         //根据查询结果，生成响应信息
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("activityList", activityList);
-        resultMap.put("totalRows", totalRows);
-        resultMap.put("totalPages", totalPages);
+        resultMap.put("totalRows", pageInfo.getTotal());
+        resultMap.put("totalPages", pageInfo.getPages());
 
         return resultMap;
     }
@@ -334,6 +342,16 @@ public class ActivityController {
         workbook.close();
     }
 
+    /**
+     * @param id:
+     * @param response:
+     * @return void
+     * @author xulingrui
+     * @description TODO
+     * 根据id字符串数组，查出所有对应id的市场活动，生成一个workbook
+     * 利用workbook.write()方法，将response的outputStream作为参数传入，直接输出到前端页面去
+     * @date 2022/6/1 17:29
+     */
     @RequestMapping("/workbench/activity/exportSelectedActivity.do")
     public void exportSelectedActivity(String[] id, HttpServletResponse response) throws Exception {
         //1、获取市场活动数据
@@ -349,5 +367,36 @@ public class ActivityController {
         workbook.write(out);
         out.flush();
         workbook.close();
+    }
+
+    /**
+     * @param userName:
+     * @param myFile: MultipartFile必须处于springMVC容器里，即在springMVC配置文件中配置文件上传解析器
+     * @return Object
+     * @author xulingrui
+     * @description TODO
+     * @date 2022/6/1 17:40
+     */
+    @RequestMapping("/workbench/activity/fileUpload.do")
+    @ResponseBody
+    public Object fileUpload(String userName, MultipartFile myFile) throws IOException {
+        //把文本数据打印到控制台
+        System.out.println("userName=" + userName);
+
+        //把文件在服务器指定目录中生成一个同样的文件
+        String fileName = myFile.getOriginalFilename();
+        File file = new File("/Users/xulingrui/Desktop/java_learning/CRM_project/serverDir/" + fileName);
+//        FileOutputStream fos = new FileOutputStream(file);
+//        fos.write(myFile.getBytes());
+//        fos.close();
+        //以上操作全部可以通过transferTo(File file)
+        myFile.transferTo(file);
+
+        //返回响应信息
+        ObjectForReturn objectForReturn = new ObjectForReturn();
+        objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
+        objectForReturn.setMessage("上传成功");
+
+        return objectForReturn;
     }
 }
