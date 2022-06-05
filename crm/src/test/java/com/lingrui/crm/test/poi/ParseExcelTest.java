@@ -8,11 +8,13 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Test;
 
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -79,5 +81,15 @@ public class ParseExcelTest {
         for (Activity activity : activityList) {
             System.out.println(activity);
         }
+    }
+
+    @Test
+    public void testWorkbookToList() throws Exception{
+        HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(Constants.SERVER_FILE_PATH + "activity_template.xls"));
+        List<Activity> activityList = POIUtils.parseWorkbookToList(workbook, Activity.class, Arrays.asList(Constants.ACTIVITY_FIELD_NAME_LIST));
+        for (Activity activity : activityList) {
+            System.out.println(activity);
+        }
+
     }
 }

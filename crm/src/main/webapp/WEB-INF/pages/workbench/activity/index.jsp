@@ -331,9 +331,21 @@
                 window.location.href = "workbench/activity/exportSelectedActivity.do?" + ids;
             });
 
+            //给"导入"按钮添加单击事件
+            $("#importActivityBtn").click(function () {
+                let filePath = $("#activityFile").val();
+                if (!filePath.endsWith(".xls")) {
+                    alert("仅支持.xls文件，请重新上传！");
+                    $("#importActivityForm").get(0).reset();
+                    return;
+                }
+
+                $("#importActivityForm").get(0).submit();
+            });
+
         });//入口函数的屁股
 
-        //在*入口函数外面*封装函数
+        //在!入口函数外面!封装函数
         function queryActivityByConditionForPage(pageNo, pageSize) {
             //收集参数：对于查询参数，不会涉及修改数据库，因此不需要trim()前后空格
             let name = $("#query-name").val();
@@ -556,30 +568,32 @@
                 </button>
                 <h4 class="modal-title" id="myModalLabel">导入市场活动</h4>
             </div>
-            <div class="modal-body" style="height: 350px;">
-                <div style="position: relative;top: 20px; left: 50px;">
-                    请选择要上传的文件：<small style="color: gray;">[仅支持.xls]</small>
+            <form id="importActivityForm" action="workbench/activity/importActivity.do" method="post" enctype="multipart/form-data">
+                <div class="modal-body" style="height: 350px;">
+                    <div style="position: relative;top: 20px; left: 50px;">
+                        请选择要上传的文件：<small style="color: gray;">[仅支持.xls]</small>
+                    </div>
+                    <div style="position: relative;top: 40px; left: 50px;">
+                        <input type="file" id="activityFile" name="importActivityFile">
+                    </div>
+                    <div style="position: relative; width: 400px; height: 320px; left: 45% ; top: -40px;">
+                        <h3>重要提示</h3>
+                        <ul>
+                            <li>操作仅针对Excel，仅支持后缀名为XLS的文件。</li>
+                            <li>给定文件的第一行将视为字段名。</li>
+                            <li>请确认您的文件大小不超过5MB。</li>
+                            <li>日期值以文本形式保存，必须符合yyyy-MM-dd格式。</li>
+                            <li>日期时间以文本形式保存，必须符合yyyy-MM-dd HH:mm:ss的格式。</li>
+                            <li>默认情况下，字符编码是UTF-8 (统一码)，请确保您导入的文件使用的是正确的字符编码方式。</li>
+                            <li>建议您在导入真实数据之前用测试文件测试文件导入功能。</li>
+                        </ul>
+                    </div>
                 </div>
-                <div style="position: relative;top: 40px; left: 50px;">
-                    <input type="file" id="activityFile">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="importActivityBtn" type="button" class="btn btn-primary">导入</button>
                 </div>
-                <div style="position: relative; width: 400px; height: 320px; left: 45% ; top: -40px;">
-                    <h3>重要提示</h3>
-                    <ul>
-                        <li>操作仅针对Excel，仅支持后缀名为XLS的文件。</li>
-                        <li>给定文件的第一行将视为字段名。</li>
-                        <li>请确认您的文件大小不超过5MB。</li>
-                        <li>日期值以文本形式保存，必须符合yyyy-MM-dd格式。</li>
-                        <li>日期时间以文本形式保存，必须符合yyyy-MM-dd HH:mm:ss的格式。</li>
-                        <li>默认情况下，字符编码是UTF-8 (统一码)，请确保您导入的文件使用的是正确的字符编码方式。</li>
-                        <li>建议您在导入真实数据之前用测试文件测试文件导入功能。</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button id="importActivityBtn" type="button" class="btn btn-primary">导入</button>
-            </div>
+            </form>
         </div>
     </div>
 </div>

@@ -8,6 +8,7 @@ import com.lingrui.crm.common.utils.DateUtils;
 import com.lingrui.crm.common.utils.POIUtils;
 import com.lingrui.crm.common.utils.UUIDUtils;
 import com.lingrui.crm.settings.domain.User;
+import com.lingrui.crm.settings.mapper.UserMapper;
 import com.lingrui.crm.settings.service.UserService;
 import com.lingrui.crm.workbench.domain.Activity;
 import com.lingrui.crm.workbench.service.ActivityService;
@@ -398,5 +399,82 @@ public class ActivityController {
         objectForReturn.setMessage("上传成功");
 
         return objectForReturn;
+    }
+
+
+    @RequestMapping("/workbench/activity/importActivity.do")
+    @ResponseBody
+    public Object importActivity(MultipartFile importActivityFile, HttpSession session) throws Exception{
+        User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);
+
+        InputStream is = importActivityFile.getInputStream();
+        HSSFWorkbook workbook = new HSSFWorkbook(is);
+        List<Activity> activityList = POIUtils.parseWorkbookToList(workbook, Activity.class, Arrays.asList(Constants.ACTIVITY_FIELD_NAME_LIST));
+
+        int originalRowNum = activityList.size();
+
+        List<Activity> errorDataList = new ArrayList<>();
+        for (Activity activity : activityList) {
+            //填充数据
+            //人员相关的字段都改为id
+            //owner
+            if (activity.getOwner() != null && !"".equals(activity.getOwner())) {
+                User owner = userService.queryUserByName(activity.getOwner());
+                if (owner != null) {
+                    activity.setOwner(owner.getId());
+                } else {
+                    //查不到这个owner，证明填错了，是错误数据
+                    errorDataList.add(activity);
+                    continue;
+                }
+            } else {
+                //owner是必填的，若没写则认为是错误数据
+                errorDataList.add(activity);
+                continue;
+            }
+            //createBy
+            if (activity.getCreateBy() != null && !"".equals(activity.getCreateBy())) {
+                User creator = userService.queryUserByName(activity.getCreateBy());
+                if (creator != null) {
+                    activity.setCreateBy(creator.getId());
+                } else {
+                    errorDataList.add(activity);
+                    continue;
+                }
+            } else {
+                //createBy没写的话，默认是当前用户创建的吧
+                activity.setCreateBy(sessionUser.getId());
+            }
+            //editBy
+            if (activity.getEditBy() != null && !"".equals(activity.getEditBy())) {
+                User editor = userService.queryUserByName(activity.getEditBy());
+                if (editor != null) {
+                    activity.setEditBy(editor.getId());
+                } else {
+                    errorDataList.add(activity);
+                    continue;
+                }
+            }//editBy不是必须的
+
+            //如果没有写创建时间，默认当前时间创建
+            if (activity.getCreateTime() == null || "".equals(activity.getCreateTime())) {
+                activity.setCreateTime(DateUtils.formatDateTime(new Date()));
+            }
+
+            //id一定是程序来生成
+            activity.setId(UUIDUtils.generateUUID());
+        }
+
+        for (Activity activity : errorDataList) {
+            activityList.remove(activity);
+        }
+
+        //调用activityService添加数据
+        int realAddedRowNum = activityService.saveActivityList(activityList);
+
+        System.out.println("数据表中记录数: " + originalRowNum + "\n实际添加条记录数: " + realAddedRowNum);
+
+
+        return null;
     }
 }

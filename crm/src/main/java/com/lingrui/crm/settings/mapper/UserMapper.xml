@@ -242,4 +242,13 @@
         FROM tbl_user
         WHERE lock_state="1";
     </select>
+
+<!--    User selectUserByName(String name);-->
+    <select id="selectUserByName" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"></include>
+        FROM tbl_user
+        WHERE name = #{name}
+        LIMIT 0, 1
+    </select>
 </mapper>

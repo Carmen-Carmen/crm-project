@@ -19,4 +19,7 @@ public class Constants {
 
     //服务器生成的文件存储位置
     public static final String SERVER_FILE_PATH = "/Users/xulingrui/Desktop/java_learning/CRM_project/serverDir/";
+
+    //Activity实体类的属性名
+    public static final String[] ACTIVITY_FIELD_NAME_LIST = new String[] {"id", "owner", "name", "startDate", "endDate", "cost", "description", "createTime", "createBy", "editTime", "editBy"};
 }

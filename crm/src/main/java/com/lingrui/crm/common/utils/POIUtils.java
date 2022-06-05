@@ -90,7 +90,7 @@ public class POIUtils {
             //生成这一行对应的实体类
             Object item = targetClass.getConstructor().newInstance();
             for (int fieldIndex = 0; fieldIndex < row.getLastCellNum(); fieldIndex++) {
-                cellValue = getCellValue(row.getCell(fieldIndex));
+                cellValue = getCellValue(row.getCell(fieldIndex, HSSFRow.MissingCellPolicy.CREATE_NULL_AS_BLANK));//就不会报空指针了！
 
                 if (rowIndex == 0 && !isFieldNameKnown) {
                     //table header

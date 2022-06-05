@@ -74,4 +74,14 @@ public interface UserMapper {
      * @date 2022/5/23 15:44
      */
     List<User> selectAllUsers();
+
+    /**
+     * @param name:
+     * @return User
+     * @author xulingrui
+     * @description TODO
+     * 根据用户名查询用户，服务于批量导入市场活动外部数据表
+     * @date 2022/6/4 00:16
+     */
+    User selectUserByName(String name);
 }
