@@ -4,8 +4,10 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
 
 import java.lang.reflect.Field;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class POIUtils {
      * 使用反射，将List中的实体类对象数据写入.xls格式的Excel文档对象
      * @date 2022/6/1 16:50
      */
-    public static <T> HSSFWorkbook generateWorkbookByList(List<T> list, String sheetName) throws IllegalAccessException {
+    public static <T> HSSFWorkbook generateWorkbookByList(List<T> list, String sheetName, List<String> fieldNameList) throws IllegalAccessException {
         if (list == null || list.size() == 0) return null;//先判断传入的list是否含有元素
 
         HSSFWorkbook workbook = new HSSFWorkbook();
@@ -37,7 +39,7 @@ public class POIUtils {
         HSSFRow header = sheet.createRow(0);
         for (int i = 0; i < fields.length; i++) {
             HSSFCell cell = header.createCell(i);
-            cell.setCellValue(fields[i].getName());
+            cell.setCellValue(fieldNameList.get(i));
         }
 
         //table body
@@ -72,14 +74,6 @@ public class POIUtils {
      * @date 2022/6/1 19:01
      */
     public static List parseWorkbookToList(HSSFWorkbook workbook, Class targetClass, List<String> fieldNameList) throws Exception {
-        //判断是否传入了有效的属性名List
-        Boolean isFieldNameKnown = false;
-        if (fieldNameList != null && fieldNameList.size() != 0) {
-            isFieldNameKnown = true;
-        } else {//没传
-            fieldNameList = new ArrayList<>();
-        }
-
         List itemList = new ArrayList();
         //解析workbook
         HSSFSheet sheet = workbook.getSheetAt(0);
@@ -90,12 +84,9 @@ public class POIUtils {
             //生成这一行对应的实体类
             Object item = targetClass.getConstructor().newInstance();
             for (int fieldIndex = 0; fieldIndex < row.getLastCellNum(); fieldIndex++) {
-                cellValue = getCellValue(row.getCell(fieldIndex));
+                cellValue = getCellValue(row.getCell(fieldIndex, HSSFRow.MissingCellPolicy.CREATE_NULL_AS_BLANK));//防止空指针
 
-                if (rowIndex == 0 && !isFieldNameKnown) {
-                    //table header
-                    fieldNameList.add(cellValue);
-                } else {
+                if (rowIndex != 0) {
                     //table body
                     Field field = targetClass.getDeclaredField(fieldNameList.get(fieldIndex));
                     field.setAccessible(true);
@@ -123,7 +114,10 @@ public class POIUtils {
         if (cellType == HSSFCell.CELL_TYPE_STRING) {
             cellValue = cell.getStringCellValue();
         } else if (cellType == HSSFCell.CELL_TYPE_NUMERIC) {
-            cellValue = cell.getNumericCellValue() + "";
+            NumberFormat nf = NumberFormat.getInstance();
+            String val = nf.format(cell.getNumericCellValue());//自动识别为double的cellValue转化为没有.0的格式
+            val.replace(",", "");
+            cellValue = val + "";
         } else if (cellType == HSSFCell.CELL_TYPE_BOOLEAN) {
             cellValue = cell.getBooleanCellValue() + "";
         } else if (cellType == HSSFCell.CELL_TYPE_FORMULA) {
@@ -131,6 +125,8 @@ public class POIUtils {
         } else {
             cellValue = "";
         }
+
+        if (cellValue == "null") cellValue = "";
 
         return cellValue;
     }

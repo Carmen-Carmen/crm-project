@@ -28,7 +28,7 @@ public class ParseExcelTest {
         List<String> fieldNameList = new ArrayList<>();
 
         //根据excel文件生成HSSFWorkbook对象，封装了excel文件的所有信息
-        FileInputStream fis = new FileInputStream(Constants.SERVER_FILE_PATH + "2c5a55178e794853aacdeea9bb81d929.xls");
+        FileInputStream fis = new FileInputStream(Constants.SERVER_FILE_PATH + "activity_import_template.xls");
         HSSFWorkbook workbook = new HSSFWorkbook(fis);
 //        //根据workbook获取HSSFSheet对象，封装了一页的所有信息
 //        HSSFSheet sheet = workbook.getSheetAt(0);//页的下标，从0开始依次增加
@@ -74,10 +74,15 @@ public class ParseExcelTest {
 //            }
 //        }
 
-        activityList = POIUtils.parseWorkbookToList(workbook, Activity.class, null);
+        activityList = POIUtils.parseWorkbookToList(workbook, Activity.class, Constants.IMPORT_ACTIVITY_FIELD_NAME_LIST);
 
         for (Activity activity : activityList) {
             System.out.println(activity);
         }
+    }
+
+    @Test
+    public void testParseInteger() {
+        System.out.println(Integer.parseInt("10.0"));
     }
 }

@@ -331,6 +331,60 @@
                 window.location.href = "workbench/activity/exportSelectedActivity.do?" + ids;
             });
 
+            //为"导入"按钮添加单击事件
+            $("#importActivityBtn").click(function () {
+                //收集参数
+                let activityFileName = $("#activityFile").val();//这样只能获取到文件名
+                // alert(activityFileName);
+                let lastIndexOfDot = activityFileName.lastIndexOf(".");
+                let suffix = activityFileName.substr(lastIndexOfDot + 1).toLowerCase();//从 . 开始，之后的
+                if (!"xls" == suffix) {//提前把suffix转化为小写，因为XLS、Xls、xLs等都是合法的Excel文件
+                    alert("仅支持.xls文件，请重新上传！");
+                    return;
+                }
+
+                //获取文件，文件是被存在input的dom对象中的一个属性里
+                let files = $("#activityFile").get(0).files;//虽然w3c设计的input标签可以上传多个文件；但是多数浏览器都只允许上传单个文件
+                let activityFile = files[0];//这个数组中只有1个文件
+                if (activityFile.size > 5*1024*1024) {
+                    alert("文件大小不得超过5MB，请重新上传！");
+                    return;
+                }
+                
+                //FormData是ajax提供的一个接口，假装自己是"表单数据"（相当于java中的类
+                //可以模拟键值对，向后台提交参数
+                //FormData的最大优势在于能向后台提交二进制数据
+                let formData = new FormData();
+                formData.append("activityFile", activityFile);
+
+                //发送ajax请求
+                $.ajax({
+                    url: "workbench/activity/importActivity.do",
+                    //这里必须使用FormData对象了！（ajax的data参数的第三种形式
+                    data: formData,
+                    processData: false,//设置ajax向后台提交参数之前，是否要把参数统一转换为字符串，默认为true
+                    contentType: false,//设置ajax向后台提交参数之前，是否把所有的参数统一按照urlencoded编码，默认为true
+                    type: "post",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.code == "1") {
+                            let affectedRowNum = data.returnData.affectedRowNum;
+                            let originRowNum = data.returnData.originRowNum;
+                            //提示数据表中数据条数和实际导入的记录条数
+                            alert("数据表中含有 " + originRowNum + " 条数据\n成功导入 " + affectedRowNum + " 条数据");
+                            //关闭modal窗口
+                            $("#importActivityModal").modal("hide");
+                            //刷新列表，保持每页显示条数不变
+                            queryActivityByConditionForPage(1, $("#paginationContainer").bs_pagination('getOption', 'rowsPerPage'))
+                        } else {
+                            //提示信息
+                            alert(data.message);
+                            //modal窗口不关闭
+                            $("#importActivityModal").modal("show");
+                        }
+                    }
+                });
+            });
         });//入口函数的屁股
 
         //在*入口函数外面*封装函数
@@ -393,8 +447,8 @@
                         //在方法体中this和参数obj作用一致：一般来说，简单的用this，复杂对象用obj
                         htmlStr += "<tr class=\"active\">";
                         htmlStr += "<td><input type=\"checkbox\" value=\"" + obj.id +"\" /></td>"//为方便checkbox后续的修改、删除操作，先把这行数据的id绑定给它
-                        htmlStr += "<td><a style=\"text-decoration: none; cursor: pointer;"
-                        htmlStr += "onclick=\"window.location.href='detail.html';\">" + obj.name + "</a></td>"
+                        htmlStr += "<td><a style=\"text-decoration: none; cursor: pointer;\""
+                        htmlStr += "onclick=\"window.location.href='workbench/activity/activityDetail.do?id=" + obj.id + "';\">" + obj.name + "</a></td>"
                         htmlStr += "<td>" + obj.owner + "</td>"
                         htmlStr += "<td>" + obj.startDate + "</td>"
                         htmlStr += "<td>" + obj.endDate + "</td>"
@@ -676,7 +730,7 @@
 <%--                <tr class="active">--%>
 <%--                    <td><input type="checkbox"/></td>--%>
 <%--                    <td><a style="text-decoration: none; cursor: pointer;"--%>
-<%--                           onclick="window.location.href='detail.html';">发传单</a></td>--%>
+<%--                           onclick="window.location.href='detail.jsp';">发传单</a></td>--%>
 <%--                    <td>zhangsan</td>--%>
 <%--                    <td>2020-10-10</td>--%>
 <%--                    <td>2020-10-20</td>--%>
@@ -684,7 +738,7 @@
 <%--                <tr class="active">--%>
 <%--                    <td><input type="checkbox"/></td>--%>
 <%--                    <td><a style="text-decoration: none; cursor: pointer;"--%>
-<%--                           onclick="window.location.href='detail.html';">发传单</a></td>--%>
+<%--                           onclick="window.location.href='detail.jsp';">发传单</a></td>--%>
 <%--                    <td>zhangsan</td>--%>
 <%--                    <td>2020-10-10</td>--%>
 <%--                    <td>2020-10-20</td>--%>

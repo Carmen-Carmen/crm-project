@@ -6,6 +6,7 @@ import com.lingrui.crm.common.constants.Constants;
 import com.lingrui.crm.common.domain.ObjectForReturn;
 import com.lingrui.crm.common.utils.DateUtils;
 import com.lingrui.crm.common.utils.POIUtils;
+import com.lingrui.crm.common.utils.StringUtils;
 import com.lingrui.crm.common.utils.UUIDUtils;
 import com.lingrui.crm.settings.domain.User;
 import com.lingrui.crm.settings.service.UserService;
@@ -303,7 +304,7 @@ public class ActivityController {
 
         //2、创建excel文件
         HSSFWorkbook workbook = null;
-        workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表");
+        workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表", Constants.EXPORT_ACTIVITY_FIELD_NAME_LIST);
         if (workbook == null) return;//没有查出任何数据时
 
 //        //3、将excel文件生成在服务器端
@@ -358,7 +359,7 @@ public class ActivityController {
         List<Activity> activityList = activityService.queryActivityByIds(id);
 
         //2、生成workbook
-        HSSFWorkbook workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表");
+        HSSFWorkbook workbook = POIUtils.generateWorkbookByList(activityList, "市场活动列表", Constants.EXPORT_ACTIVITY_FIELD_NAME_LIST);
 
         //3、写出到客户端
         response.setContentType("application/octet-stream;charset=UTF-8");//设置响应类型为应用程序文件
@@ -398,5 +399,86 @@ public class ActivityController {
         objectForReturn.setMessage("上传成功");
 
         return objectForReturn;
+    }
+
+    @RequestMapping("/workbench/activity/importActivity.do")
+    @ResponseBody
+    public Object importActivity(MultipartFile activityFile, HttpSession session) {
+        User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);
+
+        ObjectForReturn objectForReturn = new ObjectForReturn();
+        try {
+//        //1、把传输过来的Excel文件写到磁盘目录
+//            String fileName = UUIDUtils.generateUUID() + ".xls";//使用UUID给文件名重新命名，避免在服务器磁盘上文件名冲突
+//            File file = new File(Constants.SERVER_FILE_PATH + fileName);
+//            activityFile.transferTo(file);
+//        //2、解析excel文件，获取文件中的数据，并且封装成List<Activity>
+//            HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(file));
+
+            //当然也可以把MultipartFile转化为InputStream，作为参数直接传给new HSSFWorkbook
+            //规避了磁盘的读写，效率显著提高
+            HSSFWorkbook workbook = new HSSFWorkbook(activityFile.getInputStream());
+
+            //不需要用户输入的数据：id、owner、createTime、createBy、editTIme、editBy
+            List<Activity> activityList = POIUtils.parseWorkbookToList(workbook, Activity.class, Constants.IMPORT_ACTIVITY_FIELD_NAME_LIST);
+            int originRowNum = activityList.size();
+
+            //判断是否为有效数据
+            List<Activity> errorRowList = new ArrayList<>();
+            for (Activity activity : activityList) {
+                if (StringUtils.isNull(activity.getName()) || StringUtils.isNull(activity.getCost())) {//必须填写活动名称和成本
+                    errorRowList.add(activity);
+                    continue;
+                }
+                //如果开始日期和结束日期都填了，进行校验
+                if (StringUtils.isNotNull(activity.getStartDate()) && StringUtils.isNotNull(activity.getEndDate())) {
+                    if (activity.getEndDate().compareTo(activity.getStartDate()) < 0) {
+                        errorRowList.add(activity);
+                        continue;
+                    }
+                }
+
+                //走到这，说明成本肯定填了，就看输入的成本是否合法
+                try {
+                    int cost = Integer.parseInt(activity.getCost());
+                    if (cost < 0) {
+                        //成本为非负整数
+                        errorRowList.add(activity);
+                    }
+                } catch (NumberFormatException e) {
+                    //parseInt出异常，说明成本没写对
+                    errorRowList.add(activity);
+                }
+            }
+            activityList.removeAll(errorRowList);//排除错误数据
+
+            for (Activity activity : activityList) {
+                //填入id、owner、createTime、createBy
+                activity.setId(UUIDUtils.generateUUID());
+                activity.setOwner(sessionUser.getId());
+                activity.setCreateTime(DateUtils.formatDateTime(new Date()));
+                activity.setCreateBy(sessionUser.getId());
+            }
+            //调用
+            int affectedRowNum = activityService.saveActivityByList(activityList);
+            Map<String, Object> retData = new HashMap<>();
+            retData.put("affectedRowNum", affectedRowNum);
+            retData.put("originRowNum", originRowNum);
+            //3、根据处理结果生成响应信息
+            objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
+            objectForReturn.setReturnData(retData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            //出现异常
+            objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
+            objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
+        }
+
+        return objectForReturn;
+    }
+
+    @RequestMapping("/workbench/activity/activityDetail.do")
+    public String activityDetail() {
+        return "workbench/activity/detail";
     }
 }

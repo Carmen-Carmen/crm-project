@@ -1,5 +1,6 @@
 package com.lingrui.crm.test.poi;
 
+import com.lingrui.crm.common.constants.Constants;
 import com.lingrui.crm.common.utils.POIUtils;
 import com.lingrui.crm.workbench.domain.Activity;
 import com.lingrui.crm.workbench.mapper.ActivityMapper;
@@ -79,7 +80,7 @@ public class CreateExcelTest {
 
         HSSFWorkbook workbook = null;
         try {
-            workbook = POIUtils.generateWorkbookByList(activityList, null);
+            workbook = POIUtils.generateWorkbookByList(activityList, null, Constants.EXPORT_ACTIVITY_FIELD_NAME_LIST);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
