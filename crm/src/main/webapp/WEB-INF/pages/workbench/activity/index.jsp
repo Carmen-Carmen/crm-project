@@ -385,6 +385,12 @@
                     }
                 });
             });
+
+            //为"下载模板"超链接添加单击事件
+            $("#downloadTemplate").click(function () {
+                //直接发送下载文件的同步请求
+                window.location.href="workbench/activity/downloadTemplate.do";
+            });
         });//入口函数的屁股
 
         //在*入口函数外面*封装函数
@@ -613,6 +619,7 @@
             <div class="modal-body" style="height: 350px;">
                 <div style="position: relative;top: 20px; left: 50px;">
                     请选择要上传的文件：<small style="color: gray;">[仅支持.xls]</small>
+                    <small><a id="downloadTemplate">下载模板</a></small>
                 </div>
                 <div style="position: relative;top: 40px; left: 50px;">
                     <input type="file" id="activityFile">

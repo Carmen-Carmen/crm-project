@@ -401,6 +401,19 @@ public class ActivityController {
         return objectForReturn;
     }
 
+    /**
+     * @param activityFile:
+     * @param session: 需要从session中获取当前用户
+     * @return Object
+     * @author xulingrui
+     * @description TODO
+     * 接收用户上传的Excel文件
+     * 解析Excel文件中数据，生成一个List
+     * 对List中实体类对象校验，并去除不合规定数据
+     * 将List传给service，调用mapper向数据库中写数据
+     * 向前端返回实际导入数据条数等
+     * @date 2022/6/5 16:35
+     */
     @RequestMapping("/workbench/activity/importActivity.do")
     @ResponseBody
     public Object importActivity(MultipartFile activityFile, HttpSession session) {
@@ -475,6 +488,27 @@ public class ActivityController {
         }
 
         return objectForReturn;
+    }
+
+    @RequestMapping("/workbench/activity/downloadTemplate.do")
+    public void downloadTemplate(HttpServletResponse response) throws Exception {
+        //设置响应信息
+        response.setContentType("application/octet-stream;charset=UTF-8");
+        response.addHeader("Content-Disposition", "attachment;filename=" + Constants.IMPORT_ACTIVITY_TEMPLATE_FILE_NAME);
+        ServletOutputStream sos = response.getOutputStream();
+
+        //从服务器路径中取出模板
+        FileInputStream fis = new FileInputStream(Constants.SERVER_FILE_PATH + Constants.IMPORT_ACTIVITY_TEMPLATE_FILE_NAME);
+        byte[] buffer = new byte[256];
+        int len = 0;
+        while ((len = fis.read(buffer)) != -1) {
+        //写出
+            sos.write(buffer);
+        }
+
+        //资源处置
+        fis.close();
+        sos.flush();
     }
 
     @RequestMapping("/workbench/activity/activityDetail.do")

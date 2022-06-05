@@ -26,6 +26,9 @@ public class Constants {
     //服务器生成的文件存储位置
     public static final String SERVER_FILE_PATH = "/Users/xulingrui/Desktop/java_learning/CRM_project/serverDir/";
 
+    //导入市场活动模板的文件名
+    public static final String IMPORT_ACTIVITY_TEMPLATE_FILE_NAME = "activity_import_template.xls";
+
     //导入市场活动时，需要的市场活动字段名
     public static final List<String> IMPORT_ACTIVITY_FIELD_NAME_LIST = new ArrayList();
     static {
