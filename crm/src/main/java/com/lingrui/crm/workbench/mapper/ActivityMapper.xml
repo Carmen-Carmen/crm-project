@@ -388,4 +388,15 @@
              #{activity.createBy})
         </foreach>
     </insert>
+
+<!--    Activity selectActivityForDetailById(String id);-->
+    <select id="selectActivityForDetailById" parameterType="string" resultMap="BaseResultMap">
+        SELECT a.id, owner.name AS owner, a.name, a.start_date, a.end_date, a.cost, a.description,
+                a.create_time, creator.name AS create_by, a.edit_time, editor.name AS edit_by
+        FROM tbl_activity AS a
+        JOIN tbl_user AS owner ON a.owner = owner.id
+        JOIN tbl_user AS creator ON a.create_by = creator.id
+        LEFT JOIN tbl_user AS editor ON a.edit_by = editor.id
+        WHERE a.id = #{id};
+    </select>
 </mapper>

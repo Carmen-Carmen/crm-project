@@ -153,4 +153,14 @@ public interface ActivityMapper {
      * @date 2022/6/5 12:17
      */
     int insertActivityByList(List<Activity> activityList);
+
+    /**
+     * @param id:
+     * @return Activity
+     * @author xulingrui
+     * @description TODO
+     * 根据id查询市场活动的详细信息
+     * @date 2022/6/8 13:07
+     */
+    Activity selectActivityForDetailById(String id);
 }
