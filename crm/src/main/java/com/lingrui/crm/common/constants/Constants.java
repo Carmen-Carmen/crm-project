@@ -54,4 +54,7 @@ public class Constants {
         EXPORT_ACTIVITY_FIELD_NAME_LIST.add("修改时间");
         EXPORT_ACTIVITY_FIELD_NAME_LIST.add("修改者");
     }
+
+    public static final String ACTIVITY_REMARK_EDITED = "1";
+    public static final String ACTIVITY_REMARK_NOT_EDITED = "0";
 }

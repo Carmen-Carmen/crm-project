@@ -11,16 +11,13 @@ import com.lingrui.crm.common.utils.UUIDUtils;
 import com.lingrui.crm.settings.domain.User;
 import com.lingrui.crm.settings.service.UserService;
 import com.lingrui.crm.workbench.domain.Activity;
+import com.lingrui.crm.workbench.domain.ActivityRemark;
+import com.lingrui.crm.workbench.service.ActivityRemarkService;
 import com.lingrui.crm.workbench.service.ActivityService;
-import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -45,6 +41,9 @@ public class ActivityController {
 
     @Autowired
     private ActivityService activityService;
+
+    @Autowired
+    private ActivityRemarkService activityRemarkService;
 
     /**
      * @param :
@@ -512,7 +511,17 @@ public class ActivityController {
     }
 
     @RequestMapping("/workbench/activity/activityDetail.do")
-    public String activityDetail() {
+    public String activityDetail(String id, HttpServletRequest request) {
+        //调用service层，查询数据
+        Activity activity = activityService.queryActivityForDetailById(id);
+        List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(id);
+
+        //将查询出的数据放进request作用域
+        request.setAttribute("activity", activity);
+        request.setAttribute("remarkList", activityRemarkList);
+
+        //请求转发
         return "workbench/activity/detail";
     }
+
 }

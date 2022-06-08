@@ -1,7 +1,7 @@
 <%@page contentType="text/html; charset=UTF-8" language="java" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/";
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/";
 %>
 <html>
 <head>
@@ -51,8 +51,62 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             $(".myHref").mouseout(function () {
                 $(this).children("span").css("color", "#E6E6E6");
             });
-        });
 
+            //为"保存"按钮添加单击事件
+            $("#addRemarkBtn").click(function () {
+                //收集参数
+                let noteContent = $("#remark").val();
+                let activityId = $("#remarkDiv").attr("activityId");
+
+                if (noteContent == "") alert("请输入内容！");
+
+                //发送请求
+                $.ajax({
+                    url: "workbench/activity/saveCreateActivityRemark.do",
+                    data: {
+                        noteContent: noteContent,
+                        activityId: activityId
+                    },
+                    type: "post",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.code == "1") {
+                            //添加成功
+                            //清空输入框
+                            $("#remark").val("");
+                            //遍历data中的remarkList，刷新渲染备注列表
+                            let htmlStr = "";
+                            $.each(data.returnData, function(index, obj) {
+                                htmlStr += "<div class=\"remarkDiv\" style=\"height: 60px;\">\n";
+                                htmlStr += "<img title=\"" + obj.createBy + "\" src=\"image/user-thumbnail.png\" style=\"width: 30px; height:30px;\">\n";
+                                htmlStr += "<div style=\"position: relative; top: -40px; left: 40px;\">\n";
+                                htmlStr += "<h5>" + obj.noteContent + "</h5>\n";
+                                htmlStr += "<font color=\"gray\">市场活动</font> <font color=\"gray\">-</font>\n";
+                                htmlStr += "<b>${requestScope.activity.name}</b>\n";
+                                htmlStr += "<small style=\"color: gray;\">\n";
+                                htmlStr += obj.editFlag == "1"? (obj.editTime + " 由" + obj.editBy + "修改") : (obj.createTime + " 由" + obj.createBy + "创建") + "\n";
+                                htmlStr += "</small>\n";
+                                htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
+                                htmlStr += "<a class=\"myHref\" href=\"javascript:void(0);\" remarkId=\"" + obj.noteContent + "\">\n";
+                                htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
+                                htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
+                                htmlStr += "<a class=\"myHref\" href=\"javascript:void(0);\" remarkId=\"" + obj.noteContent + "\">\n";
+                                htmlStr += "<span class=\" glyphicon glyphicon-remove\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n"
+                                htmlStr += "</div></div></div>\n";
+                            });
+
+                            $("#remarkListContainer").html(htmlStr);
+                        } else {
+                            //添加失败
+                            //提示信息
+                            alert(data.message);
+                            //输入框不清空，列表也不刷新
+                        }
+                    }
+                });
+
+            });
+        });
     </script>
 
 </head>
@@ -73,7 +127,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
             <div class="modal-body">
                 <form class="form-horizontal" role="form">
                     <div class="form-group">
-                        <label for="edit-describe" class="col-sm-2 control-label">内容</label>
+                        <label for="noteContent" class="col-sm-2 control-label">内容</label>
                         <div class="col-sm-10" style="width: 81%;" id="edit-describe">
                             <textarea class="form-control" rows="3" id="noteContent"></textarea>
                         </div>
@@ -98,7 +152,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 <!-- 大标题 -->
 <div style="position: relative; left: 40px; top: -30px;">
     <div class="page-header">
-        <h3>市场活动-发传单 <small>2020-10-10 ~ 2020-10-20</small></h3>
+        <h3>市场活动-${requestScope.activity.name}<small>${requestScope.activity.startDate}
+            ~ ${requestScope.activity.endDate}</small></h3>
     </div>
 
 </div>
@@ -111,43 +166,57 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 <div style="position: relative; top: -70px;">
     <div style="position: relative; left: 40px; height: 30px;">
         <div style="width: 300px; color: gray;">所有者</div>
-        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>zhangsan</b></div>
+        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>${requestScope.activity.owner}</b>
+        </div>
         <div style="width: 300px;position: relative; left: 450px; top: -40px; color: gray;">名称</div>
-        <div style="width: 300px;position: relative; left: 650px; top: -60px;"><b>发传单</b></div>
+        <div style="width: 300px;position: relative; left: 650px; top: -60px;"><b>${requestScope.activity.name}</b>
+        </div>
         <div style="height: 1px; width: 400px; background: #D5D5D5; position: relative; top: -60px;"></div>
         <div style="height: 1px; width: 400px; background: #D5D5D5; position: relative; top: -60px; left: 450px;"></div>
     </div>
 
     <div style="position: relative; left: 40px; height: 30px; top: 10px;">
         <div style="width: 300px; color: gray;">开始日期</div>
-        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>2020-10-10</b></div>
+        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>${requestScope.activity.startDate}</b>
+        </div>
         <div style="width: 300px;position: relative; left: 450px; top: -40px; color: gray;">结束日期</div>
-        <div style="width: 300px;position: relative; left: 650px; top: -60px;"><b>2020-10-20</b></div>
+        <div style="width: 300px;position: relative; left: 650px; top: -60px;"><b>${requestScope.activity.endDate}</b>
+        </div>
         <div style="height: 1px; width: 400px; background: #D5D5D5; position: relative; top: -60px;"></div>
         <div style="height: 1px; width: 400px; background: #D5D5D5; position: relative; top: -60px; left: 450px;"></div>
     </div>
     <div style="position: relative; left: 40px; height: 30px; top: 20px;">
         <div style="width: 300px; color: gray;">成本</div>
-        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>4,000</b></div>
+        <div style="width: 300px;position: relative; left: 200px; top: -20px;"><b>${requestScope.activity.cost}</b>
+        </div>
         <div style="height: 1px; width: 400px; background: #D5D5D5; position: relative; top: -20px;"></div>
     </div>
     <div style="position: relative; left: 40px; height: 30px; top: 30px;">
         <div style="width: 300px; color: gray;">创建者</div>
-        <div style="width: 500px;position: relative; left: 200px; top: -20px;"><b>zhangsan&nbsp;&nbsp;</b><small
-                style="font-size: 10px; color: gray;">2017-01-18 10:10:10</small></div>
+        <div style="width: 500px;position: relative; left: 200px; top: -20px;"><b>${requestScope.activity.createBy}&nbsp;&nbsp;</b><small
+                style="font-size: 10px; color: gray;">${requestScope.activity.createTime}</small></div>
         <div style="height: 1px; width: 550px; background: #D5D5D5; position: relative; top: -20px;"></div>
     </div>
     <div style="position: relative; left: 40px; height: 30px; top: 40px;">
         <div style="width: 300px; color: gray;">修改者</div>
-        <div style="width: 500px;position: relative; left: 200px; top: -20px;"><b>zhangsan&nbsp;&nbsp;</b><small
-                style="font-size: 10px; color: gray;">2017-01-19 10:10:10</small></div>
+        <div style="width: 500px;position: relative; left: 200px; top: -20px;">
+            <c:if test="${not empty requestScope.activity.editBy}">
+                <b>${requestScope.activity.editBy}&nbsp;&nbsp;</b>
+            </c:if>
+            <c:if test="${empty requestScope.activity.editBy}">
+                <b>无&nbsp;&nbsp;</b>
+            </c:if>
+            <c:if test="${not empty requestScope.activity.editTime}">
+                <small style="font-size: 10px; color: gray;">${requestScope.activity.editTime}</small>
+            </c:if>
+        </div>
         <div style="height: 1px; width: 550px; background: #D5D5D5; position: relative; top: -20px;"></div>
     </div>
     <div style="position: relative; left: 40px; height: 30px; top: 50px;">
         <div style="width: 300px; color: gray;">描述</div>
         <div style="width: 630px;position: relative; left: 200px; top: -20px;">
             <b>
-                市场活动Marketing，是指品牌主办或参与的展览会议与公关市场活动，包括自行主办的各类研讨会、客户交流会、演示会、新产品发布会、体验会、答谢会、年会和出席参加并布展或演讲的展览会、研讨会、行业交流会、颁奖典礼等
+                ${requestScope.activity.description}
             </b>
         </div>
         <div style="height: 1px; width: 850px; background: #D5D5D5; position: relative; top: -20px;"></div>
@@ -160,47 +229,73 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
         <h4>备注</h4>
     </div>
 
-    <!-- 备注1 -->
-    <div class="remarkDiv" style="height: 60px;">
-        <img title="zhangsan" src="../../image/user-thumbnail.png" style="width: 30px; height:30px;">
-        <div style="position: relative; top: -40px; left: 40px;">
-            <h5>哎呦！</h5>
-            <font color="gray">市场活动</font> <font color="gray">-</font> <b>发传单</b> <small style="color: gray;">
-            2017-01-22 10:10:10 由zhangsan</small>
-            <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
-                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-edit"
-                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-remove"
-                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>
+    <div id="remarkListContainer">
+    <%--    使用jstl遍历request作用域中的remarkList          循环变量名--%>
+        <c:forEach items="${requestScope.remarkList}" var="remark">
+            <div class="remarkDiv" style="height: 60px;">
+                <img title="${remark.createBy}" src="image/user-thumbnail.png" style="width: 30px; height:30px;">
+                <div style="position: relative; top: -40px; left: 40px;">
+                    <h5>${remark.noteContent}</h5>
+                    <font color="gray">市场活动</font> <font color="gray">-</font>
+                    <b>${requestScope.activity.name}</b>
+                    <small style="color: gray;">
+                            <%--                    用el表达式的三元运算符代替jstl的if标签！--%>
+                            ${remark.editFlag == '1'?remark.editTime:remark.createTime}
+                        由${remark.editFlag == '1'?remark.editBy:remark.createBy}${remark.editFlag == '1'?'修改':'创建'}
+                    </small>
+                    <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
+                        <a class="myHref" href="javascript:void(0);" remarkId="${remark.id}">
+                            <span class="glyphicon glyphicon-edit" style="font-size: 20px; color: #E6E6E6;"></span></a>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a class="myHref" href="javascript:void(0);" remarkId="${remark.id}">
+                            <span class=" glyphicon glyphicon-remove" style="font-size: 20px; color: #E6E6E6;"></span></a>
+                    </div>
+                </div>
             </div>
-        </div>
+        </c:forEach>
     </div>
 
-    <!-- 备注2 -->
-    <div class="remarkDiv" style="height: 60px;">
-        <img title="zhangsan" src="../../image/user-thumbnail.png" style="width: 30px; height:30px;">
-        <div style="position: relative; top: -40px; left: 40px;">
-            <h5>呵呵！</h5>
-            <font color="gray">市场活动</font> <font color="gray">-</font> <b>发传单</b> <small style="color: gray;">
-            2017-01-22 10:20:10 由zhangsan</small>
-            <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
-                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-edit"
-                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-remove"
-                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>
-            </div>
-        </div>
-    </div>
+    <%--    <!-- 备注1 -->--%>
+    <%--    <div class="remarkDiv" style="height: 60px;">--%>
+    <%--        <img title="zhangsan" src="image/user-thumbnail.png" style="width: 30px; height:30px;">--%>
+    <%--        <div style="position: relative; top: -40px; left: 40px;">--%>
+    <%--            <h5>哎呦！</h5>--%>
+    <%--            <font color="gray">市场活动</font> <font color="gray">-</font> <b>发传单</b> <small style="color: gray;">--%>
+    <%--            2017-01-22 10:10:10 由zhangsan</small>--%>
+    <%--            <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">--%>
+    <%--                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-edit"--%>
+    <%--                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>--%>
+    <%--                &nbsp;&nbsp;&nbsp;&nbsp;--%>
+    <%--                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-remove"--%>
+    <%--                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>--%>
+    <%--            </div>--%>
+    <%--        </div>--%>
+    <%--    </div>--%>
 
-    <div id="remarkDiv" style="background-color: #E6E6E6; width: 870px; height: 90px;">
+    <%--    <!-- 备注2 -->--%>
+    <%--    <div class="remarkDiv" style="height: 60px;">--%>
+    <%--        <img title="zhangsan" src="image/user-thumbnail.png" style="width: 30px; height:30px;">--%>
+    <%--        <div style="position: relative; top: -40px; left: 40px;">--%>
+    <%--            <h5>呵呵！</h5>--%>
+    <%--            <font color="gray">市场活动</font> <font color="gray">-</font> <b>发传单</b> <small style="color: gray;">--%>
+    <%--            2017-01-22 10:20:10 由zhangsan</small>--%>
+    <%--            <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">--%>
+    <%--                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-edit"--%>
+    <%--                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>--%>
+    <%--                &nbsp;&nbsp;&nbsp;&nbsp;--%>
+    <%--                <a class="myHref" href="javascript:void(0);"><span class="glyphicon glyphicon-remove"--%>
+    <%--                                                                   style="font-size: 20px; color: #E6E6E6;"></span></a>--%>
+    <%--            </div>--%>
+    <%--        </div>--%>
+    <%--    </div>--%>
+
+    <div id="remarkDiv" style="background-color: #E6E6E6; width: 870px; height: 90px;" activityId="${requestScope.activity.id}">
         <form role="form" style="position: relative;top: 10px; left: 10px;">
             <textarea id="remark" class="form-control" style="width: 850px; resize : none;" rows="2"
                       placeholder="添加备注..."></textarea>
             <p id="cancelAndSaveBtn" style="position: relative;left: 737px; top: 10px; display: none;">
                 <button id="cancelBtn" type="button" class="btn btn-default">取消</button>
-                <button type="button" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-primary" id="addRemarkBtn">保存</button>
             </p>
         </form>
     </div>

@@ -459,7 +459,7 @@
                         htmlStr += "<td>" + obj.startDate + "</td>"
                         htmlStr += "<td>" + obj.endDate + "</td>"
                         htmlStr += "</tr>"
-                    })
+                    });
                     // 然后找到table标签的jquery对象，把htmlStr填入它的html，注意是html不是text！
                     $("#activity-tbody").html(htmlStr);//使用html的覆盖显示，而不是append的追加显示，不然点一次查询就会多几行，前面数据不会清掉
 
