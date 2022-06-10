@@ -72,4 +72,14 @@ public interface ActivityRemarkMapper {
      * @date 2022/6/8 18:15
      */
     int insertActivityRemark(ActivityRemark activityRemark);
+
+    /**
+     * @param id:
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 根据id删除数据库中的市场活动备注
+     * @date 2022/6/10 22:29
+     */
+    int deleteActivityRemarkById(String id);
 }

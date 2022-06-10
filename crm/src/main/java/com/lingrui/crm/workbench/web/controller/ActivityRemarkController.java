@@ -47,7 +47,7 @@ public class ActivityRemarkController {
         //从session中获取当前用户
         User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);
 
-        //封装参数，前端能提供的：noteContent和activityId
+        //1、封装参数，前端能提供的：noteContent和activityId
         ActivityRemark activityRemark = new ActivityRemark();
         activityRemark.setId(UUIDUtils.generateUUID());//id
         activityRemark.setNoteContent(noteContent);
@@ -58,12 +58,12 @@ public class ActivityRemarkController {
 
         ObjectForReturn objectForReturn = null;
         try {//涉及向数据库中写数据的，最好都try-catch一下
-            //调用service层，添加记录
+        //2、调用service层，添加记录
             int affectedRows = activityRemarkService.saveCreateActivityRemark(activityRemark);
             //查出新的activityRemarkList
             List<ActivityRemark> remarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
 
-            //根据结果，返回响应信息
+        //3、根据结果，返回响应信息
             objectForReturn = new ObjectForReturn();
             if (affectedRows == 1) {
                 //插入了一条
@@ -82,4 +82,43 @@ public class ActivityRemarkController {
 
         return objectForReturn;
     }
+
+    /**
+     * @param remarkId:
+     * @param activityId:
+     * @return Object
+     * @author xulingrui
+     * @description TODO
+     * 处理浏览器发来删除市场活动备注的请求
+     * @date 2022/6/10 23:12
+     */
+    @RequestMapping("/workbench/activity/deleteActivityRemarkById.do")
+    @ResponseBody
+    public Object deleteActivityRemarkById(String remarkId, String activityId) {
+        ObjectForReturn objectForReturn = null;
+        try {
+        //1、调用service层执行删除
+            int affectedRows = activityRemarkService.deleteActivityRemarkById(remarkId);
+            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
+
+        //2、根据结果生成响应信息
+            objectForReturn = new ObjectForReturn();
+            if (affectedRows == 1) {
+                objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
+                objectForReturn.setReturnData(activityRemarkList);
+            } else {
+                //没删掉或是其他情况
+                objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
+                objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
+            objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
+        }
+
+        return objectForReturn;
+    }
+
+    
 }

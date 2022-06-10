@@ -467,7 +467,7 @@
                     $("#selectAll").prop("checked", false);
                 }
             });
-        }
+        };
     </script>
 </head>
 <body>

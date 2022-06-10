@@ -79,27 +79,7 @@
                             //清空输入框
                             $("#remark").val("");
                             //遍历data中的remarkList，局部刷新，渲染备注列表
-                            let htmlStr = "";
-                            $.each(data.returnData, function(index, obj) {
-                                htmlStr += "<div class=\"remarkDiv\" style=\"height: 60px;\">\n";
-                                htmlStr += "<img title=\"" + obj.createBy + "\" src=\"image/user-thumbnail.png\" style=\"width: 30px; height:30px;\">\n";
-                                htmlStr += "<div style=\"position: relative; top: -40px; left: 40px;\">\n";
-                                htmlStr += "<h5>" + obj.noteContent + "</h5>\n";
-                                htmlStr += "<font color=\"gray\">市场活动</font> <font color=\"gray\">-</font>\n";
-                                htmlStr += "<b>${requestScope.activity.name}</b>\n";
-                                htmlStr += "<small style=\"color: gray;\">\n";
-                                htmlStr += obj.editFlag == "1"? (obj.editTime + " 由" + obj.editBy + "修改") : (obj.createTime + " 由" + obj.createBy + "创建") + "\n";
-                                htmlStr += "</small>\n";
-                                htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
-                                htmlStr += "<a class=\"myHref\" href=\"javascript:void(0);\" remarkId=\"" + obj.noteContent + "\">\n";
-                                htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
-                                htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
-                                htmlStr += "<a class=\"myHref\" href=\"javascript:void(0);\" remarkId=\"" + obj.noteContent + "\">\n";
-                                htmlStr += "<span class=\" glyphicon glyphicon-remove\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n"
-                                htmlStr += "</div></div></div>\n";
-                            });
-
-                            $("#remarkListContainer").html(htmlStr);
+                            refreshActivityRemarkList(data.returnData);
                         } else {
                             //添加失败
                             //提示信息
@@ -128,7 +108,59 @@
                 $(this).children("span").css("color", "#E6E6E6");
             });
 
+            $(document).on("click", ".deleteActivityRemarkBtn", function () {
+                //收集参数
+                let remarkId = $(this).attr("remarkId");
+                let activityId = "${requestScope.activity.id}";
+                // alert(remarkId);
+                $.ajax({
+                    url: "workbench/activity/deleteActivityRemarkById.do",
+                    data: {
+                        remarkId: remarkId,
+                        activityId: activityId
+                    },
+                    type: "post",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.code == "1") {
+                            //添加成功
+                            //刷新市场活动备注列表
+                            refreshActivityRemarkList(data.returnData);
+                        } else {
+                            //添加失败
+                            //提示信息
+                            alert(data.message);
+                            //列表不刷新
+                        }
+                    }
+                });
+            });
         });
+
+        function refreshActivityRemarkList(activityRemarkList) {
+            //遍历data中的remarkList，局部刷新，渲染备注列表
+            let htmlStr = "";
+            $.each(activityRemarkList, function(index, obj) {
+                htmlStr += "<div class=\"remarkDiv\" style=\"height: 60px;\">\n";
+                htmlStr += "<img title=\"" + obj.createBy + "\" src=\"image/user-thumbnail.png\" style=\"width: 30px; height:30px;\">\n";
+                htmlStr += "<div style=\"position: relative; top: -40px; left: 40px;\">\n";
+                htmlStr += "<h5>" + obj.noteContent + "</h5>\n";
+                htmlStr += "<font color=\"gray\">市场活动</font> <font color=\"gray\">-</font>\n";
+                htmlStr += "<b>${requestScope.activity.name}</b>\n";
+                htmlStr += "<small style=\"color: gray;\">\n";
+                htmlStr += obj.editFlag == "1"? (obj.editTime + " 由" + obj.editBy + "修改") : (obj.createTime + " 由" + obj.createBy + "创建") + "\n";
+                htmlStr += "</small>\n";
+                htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
+                htmlStr += "<a class=\"myHref editActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
+                htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
+                htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
+                htmlStr += "<a class=\"myHref deleteActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
+                htmlStr += "<span class=\" glyphicon glyphicon-remove\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n"
+                htmlStr += "</div></div></div>\n";
+            });
+
+            $("#remarkListContainer").html(htmlStr);
+        }
     </script>
 
 </head>
@@ -265,10 +297,10 @@
                         由${remark.editFlag == '1'?remark.editBy:remark.createBy}${remark.editFlag == '1'?'修改':'创建'}
                     </small>
                     <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
-                        <a class="myHref" href="javascript:void(0);" remarkId="${remark.id}">
+                        <a class="myHref editActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}">
                             <span class="glyphicon glyphicon-edit" style="font-size: 20px; color: #E6E6E6;"></span></a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <a class="myHref" href="javascript:void(0);" remarkId="${remark.id}">
+                        <a class="myHref deleteActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}">
                             <span class=" glyphicon glyphicon-remove" style="font-size: 20px; color: #E6E6E6;"></span></a>
                     </div>
                 </div>

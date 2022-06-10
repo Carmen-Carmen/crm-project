@@ -196,4 +196,10 @@
                 #{editFlag},
                 #{activityId})
     </insert>
+
+    <!--    int deleteActivityRemarkById(String id);-->
+    <delete id="deleteActivityRemarkById" parameterType="string">
+        DELETE FROM tbl_activity_remark
+        WHERE id = #{id}
+    </delete>
 </mapper>
