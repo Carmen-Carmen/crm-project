@@ -108,6 +108,7 @@
                 $(this).children("span").css("color", "#E6E6E6");
             });
 
+            //为删除市场活动超链接添加单击事件
             $(document).on("click", ".deleteActivityRemarkBtn", function () {
                 //收集参数
                 let remarkId = $(this).attr("remarkId");
@@ -135,6 +136,61 @@
                     }
                 });
             });
+
+            //为修改市场活动超链接添加单击事件
+            $(document).on("click", ".editActivityRemarkBtn", function () {
+                //把修改按钮上的remarkId贴一份到modal窗口的div上
+                let remarkId = $(this).attr("remarkId");
+                $("#editRemarkModal").attr("remarkId", remarkId);
+                //noteContent回显
+                let noteContent = $(this).attr("noteContent");
+                $("#noteContent").val(noteContent);
+                //弹出modal窗口
+                $("#editRemarkModal").modal("show");
+            });
+
+            //为修改市场活动modal窗口中"更新"按钮添加单击事件
+            $("#updateRemarkBtn").click(function () {
+                //收集信息
+                let remarkId = $("#editRemarkModal").attr("remarkId");
+                let noteContent = $("#noteContent").val();
+                let activityId = "${requestScope.activity.id}";
+                // alert(remarkId);
+
+                if (noteContent == "") {
+                    alert("修改备注内容不得为空！");
+                    return;
+                }
+
+                //发送ajax请求
+                $.ajax({
+                    url: "workbench/activity/saveEditActivityRemark.do",
+                    data: {
+                        id: remarkId, //id是ActivityRemark实体类中的属性名
+                        noteContent: noteContent,
+                        activityId: activityId
+                    },
+                    type: "post",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.code == "1") {
+                            //修改成功
+                            //刷新备注列表
+                            refreshActivityRemarkList(data.returnData);
+                            //关闭modal窗口，顺便把modal窗的属性和输入框内容清掉吧
+                            $("#noteContent").val("");
+                            $("#editRemarkModal").attr("remarkId", "");
+                            $("#editRemarkModal").modal("hide");
+                        } else {
+                            //修改失败
+                            //提示信息
+                            alert(data.message);
+                            //modal窗口不关闭
+                            $("#editRemarkModal").modal("show");
+                        }
+                    }
+                });
+            });
         });
 
         function refreshActivityRemarkList(activityRemarkList) {
@@ -151,7 +207,7 @@
                 htmlStr += obj.editFlag == "1"? (obj.editTime + " 由" + obj.editBy + "修改") : (obj.createTime + " 由" + obj.createBy + "创建") + "\n";
                 htmlStr += "</small>\n";
                 htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
-                htmlStr += "<a class=\"myHref editActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
+                htmlStr += "<a class=\"myHref editActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\" noteContent=\"" + obj.noteContent + "\" >\n";
                 htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
                 htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
                 htmlStr += "<a class=\"myHref deleteActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
@@ -297,7 +353,7 @@
                         由${remark.editFlag == '1'?remark.editBy:remark.createBy}${remark.editFlag == '1'?'修改':'创建'}
                     </small>
                     <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
-                        <a class="myHref editActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}">
+                        <a class="myHref editActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}" noteContent="${remark.noteContent}" >
                             <span class="glyphicon glyphicon-edit" style="font-size: 20px; color: #E6E6E6;"></span></a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <a class="myHref deleteActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}">

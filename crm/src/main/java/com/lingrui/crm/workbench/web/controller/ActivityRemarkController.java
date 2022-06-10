@@ -98,12 +98,12 @@ public class ActivityRemarkController {
         ObjectForReturn objectForReturn = null;
         try {
         //1、调用service层执行删除
-            int affectedRows = activityRemarkService.deleteActivityRemarkById(remarkId);
+            int affectedRowNum = activityRemarkService.deleteActivityRemarkById(remarkId);
             List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
 
         //2、根据结果生成响应信息
             objectForReturn = new ObjectForReturn();
-            if (affectedRows == 1) {
+            if (affectedRowNum == 1) {
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
                 objectForReturn.setReturnData(activityRemarkList);
             } else {
@@ -120,5 +120,35 @@ public class ActivityRemarkController {
         return objectForReturn;
     }
 
-    
+    @RequestMapping("/workbench/activity/saveEditActivityRemark.do")
+    @ResponseBody
+    public Object saveEditActivityRemark(ActivityRemark activityRemark, HttpSession session) {
+        User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);
+
+        //1、封装剩余参数
+        activityRemark.setEditBy(sessionUser.getId());
+        activityRemark.setEditTime(DateUtils.formatDateTime(new Date()));
+        activityRemark.setEditFlag(Constants.ACTIVITY_REMARK_EDITED);
+
+        ObjectForReturn objectForReturn = null;
+        try {
+        //2、调用service层完成编辑
+            int affectedRowNum = activityRemarkService.saveEditActivityRemark(activityRemark);
+            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityRemark.getActivityId());
+
+        //3、根据结果生成响应信息
+            objectForReturn = new ObjectForReturn();
+            if (affectedRowNum == 1) {
+                objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
+                objectForReturn.setReturnData(activityRemarkList);
+            } else {
+                objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
+                objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return objectForReturn;
+    }
 }

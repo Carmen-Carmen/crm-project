@@ -199,7 +199,18 @@
 
     <!--    int deleteActivityRemarkById(String id);-->
     <delete id="deleteActivityRemarkById" parameterType="string">
-        DELETE FROM tbl_activity_remark
+        DELETE
+        FROM tbl_activity_remark
         WHERE id = #{id}
     </delete>
+
+    <!--    int updateActivityRemark(ActivityRemark activityRemark);-->
+    <update id="updateActivityRemark" parameterType="com.lingrui.crm.workbench.domain.ActivityRemark">
+        UPDATE tbl_activity_remark
+        SET note_content = #{noteContent},
+            edit_by = #{editBy},
+            edit_time = #{editTime},
+            edit_flag = #{editFlag}
+        WHERE id = #{id}
+    </update>
 </mapper>

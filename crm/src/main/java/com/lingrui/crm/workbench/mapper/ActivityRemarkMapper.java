@@ -82,4 +82,19 @@ public interface ActivityRemarkMapper {
      * @date 2022/6/10 22:29
      */
     int deleteActivityRemarkById(String id);
+
+    /**
+     * @param activityRemark: 含有修改过的字段的市场活动备注
+     * @return int
+     * @author xulingrui
+     * @description TODO
+     * 被修改过的字段
+     *      note_content
+     *      edit_by
+     *      edit_time
+     *      edit_flag
+     * WHERE id = 这条记录的id
+     * @date 2022/6/10 23:35
+     */
+    int updateActivityRemark(ActivityRemark activityRemark);
 }
