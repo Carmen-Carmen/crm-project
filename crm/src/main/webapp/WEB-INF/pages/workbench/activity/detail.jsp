@@ -55,10 +55,14 @@
             //为"保存"按钮添加单击事件
             $("#addRemarkBtn").click(function () {
                 //收集参数
-                let noteContent = $("#remark").val();
-                let activityId = $("#remarkDiv").attr("activityId");
+                let noteContent = $.trim($("#remark").val());
+                let activityId = "${requestScope.activity.id}";
 
-                if (noteContent == "") alert("请输入内容！");
+                //表单验证
+                if (noteContent == "") {
+                    alert("请输入内容！");
+                    return;
+                }
 
                 //发送请求
                 $.ajax({
@@ -74,7 +78,7 @@
                             //添加成功
                             //清空输入框
                             $("#remark").val("");
-                            //遍历data中的remarkList，刷新渲染备注列表
+                            //遍历data中的remarkList，局部刷新，渲染备注列表
                             let htmlStr = "";
                             $.each(data.returnData, function(index, obj) {
                                 htmlStr += "<div class=\"remarkDiv\" style=\"height: 60px;\">\n";
@@ -104,8 +108,26 @@
                         }
                     }
                 });
-
             });
+
+            //动态渲染生成的标签要用on绑定事件
+            //笑了，老师为了这些事件添加，给remarkDiv列表外面又加了一个div，那之前渲染还不如用append呢
+            $(document).on("mouseover", ".remarkDiv", function () {
+                $(this).children("div").children("div").show();
+            });
+
+            $(document).on("mouseout", ".remarkDiv", function () {
+                $(this).children("div").children("div").hide();
+            });
+
+            $(document).on("mouseover", ".myHref", function () {
+                $(this).children("span").css("color", "red");
+            });
+
+            $(document).on("mouseout", ".myHref", function () {
+                $(this).children("span").css("color", "#E6E6E6");
+            });
+
         });
     </script>
 
@@ -145,8 +167,7 @@
 
 <!-- 返回按钮 -->
 <div style="position: relative; top: 35px; left: 10px;">
-    <a href="javascript:void(0);" onclick="window.history.back();"><span class="glyphicon glyphicon-arrow-left"
-                                                                         style="font-size: 20px; color: #DDDDDD"></span></a>
+    <a href="javascript:void(0);" onclick="window.history.back();"><span class="glyphicon glyphicon-arrow-left" style="font-size: 20px; color: #DDDDDD"></span></a>
 </div>
 
 <!-- 大标题 -->
@@ -289,6 +310,12 @@
     <%--        </div>--%>
     <%--    </div>--%>
 
+<%--    我的方案是给所有的class="remarkDiv"外面加了一个container的div；但实际上也可以在下面这个id="remarkDiv"的jquery选择器.before(htmlStr)来渲染新数据--%>
+
+<%--
+    <div id="remarkDiv" style="background-color: #E6E6E6; width: 870px; height: 90px;" activityId="${requestScope.activity.id}">
+                                                                    在js代码中也可以通过el表达式获取作用域里的数据，因此这里不用把所属activity的id绑定在标签上了
+--%>
     <div id="remarkDiv" style="background-color: #E6E6E6; width: 870px; height: 90px;" activityId="${requestScope.activity.id}">
         <form role="form" style="position: relative;top: 10px; left: 10px;">
             <textarea id="remark" class="form-control" style="width: 850px; resize : none;" rows="2"

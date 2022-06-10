@@ -30,9 +30,21 @@ public class ActivityRemarkController {
     @Autowired
     private ActivityRemarkService activityRemarkService;
 
+    /**
+     * @param noteContent:
+     * @param activityId:
+     * @param session:
+     * @return Object
+     * @author xulingrui
+     * @description TODO
+     * 收集前台传来的两个参数，封装进ActivityRemark实体类中，传给Service层一路往下
+     * 也可以把noteContent和activityId用ActivityRemark实体类来接收
+     * @date 2022/6/10 19:31
+     */
     @RequestMapping("/workbench/activity/saveCreateActivityRemark.do")
     @ResponseBody
     public Object saveCreateActivityRemark(String noteContent, String activityId, HttpSession session) {
+        //从session中获取当前用户
         User sessionUser = (User) session.getAttribute(Constants.SESSION_USER);
 
         //封装参数，前端能提供的：noteContent和activityId
@@ -41,11 +53,11 @@ public class ActivityRemarkController {
         activityRemark.setNoteContent(noteContent);
         activityRemark.setCreateTime(DateUtils.formatDateTime(new Date()));
         activityRemark.setCreateBy(sessionUser.getId());
-        activityRemark.setEditFlag(Constants.ACTIVITY_REMARK_NOT_EDITED);
+        activityRemark.setEditFlag(Constants.ACTIVITY_REMARK_NOT_EDITED);//刚创建的activityRemark没有修改过
         activityRemark.setActivityId(activityId);
 
         ObjectForReturn objectForReturn = null;
-        try {
+        try {//涉及向数据库中写数据的，最好都try-catch一下
             //调用service层，添加记录
             int affectedRows = activityRemarkService.saveCreateActivityRemark(activityRemark);
             //查出新的activityRemarkList

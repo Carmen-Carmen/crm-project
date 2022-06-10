@@ -166,27 +166,34 @@
         where id = #{id,jdbcType=CHAR}
     </update>
 
-    <!--  List<ActivityRemark> selectActivityRemarkForDetailByActivityId(String activityId);-->
+    <!--  List<ActivityRemark> selectActivityRemarkForDetailByActivityId(String activityId);
+        按照创建时间升序排列
+    -->
     <select id="selectActivityRemarkForDetailByActivityId" parameterType="string" resultMap="BaseResultMap">
-        SELECT ar.id, ar.note_content, ar.create_time, creator.name AS create_by, ar.edit_time, editor.name AS edit_by, ar.edit_flag
+        SELECT ar.id,
+               ar.note_content,
+               ar.create_time,
+               creator.name AS create_by,
+               ar.edit_time,
+               editor.name  AS edit_by,
+               ar.edit_flag
         FROM tbl_activity_remark AS ar
                  JOIN tbl_user AS creator ON ar.create_by = creator.id
                  LEFT JOIN tbl_user AS editor ON ar.edit_by = editor.id
         WHERE ar.activity_id = #{id}
+        ORDER BY ar.create_time ASC
     </select>
 
-<!--    int insertActivityRemark(ActivityRemark activityRemark);-->
+    <!--    int insertActivityRemark(ActivityRemark activityRemark);
+            添加的市场活动备注一定是没有editBy和editTime的，不用添加
+    -->
     <insert id="insertActivityRemark" parameterType="com.lingrui.crm.workbench.domain.ActivityRemark">
-        INSERT INTO tbl_activity_remark VALUES
-        (
-         #{id},
-         #{noteContent},
-         #{createTime},
-         #{createBy},
-         #{editTime},
-         #{editBy},
-         #{editFlag},
-         #{activityId}
-         )
+        INSERT INTO tbl_activity_remark(id, note_content, create_time, create_by, edit_flag, activity_id)
+        VALUES (#{id},
+                #{noteContent},
+                #{createTime},
+                #{createBy},
+                #{editFlag},
+                #{activityId})
     </insert>
 </mapper>
