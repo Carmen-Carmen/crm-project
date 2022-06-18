@@ -88,6 +88,7 @@ public interface ActivityRemarkMapper {
      * @return int
      * @author xulingrui
      * @description TODO
+     * 更新修改过的activityRemark
      * 被修改过的字段
      *      note_content
      *      edit_by

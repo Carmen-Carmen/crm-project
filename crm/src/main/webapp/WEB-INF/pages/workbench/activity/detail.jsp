@@ -78,8 +78,32 @@
                             //添加成功
                             //清空输入框
                             $("#remark").val("");
-                            //遍历data中的remarkList，局部刷新，渲染备注列表
-                            refreshActivityRemarkList(data.returnData);
+                            // //遍历data中的remarkList，局部刷新，渲染备注列表
+                            // refreshActivityRemarkList(data.returnData);
+
+                            //仅把最新的一条append
+                            let newActivityRemark = data.returnData;
+                            let htmlStr = "";
+
+                            htmlStr += "<div class=\"remarkDiv\" id=\"div_" + newActivityRemark.id + "\" style=\"height: 60px;\">\n";
+                            htmlStr += "<img title=\"" + newActivityRemark.createBy + "\" src=\"image/user-thumbnail.png\" style=\"width: 30px; height:30px;\">\n";
+                            htmlStr += "<div style=\"position: relative; top: -40px; left: 40px;\">\n";
+                            htmlStr += "<h5>" + newActivityRemark.noteContent + "</h5>\n";
+                            htmlStr += "<font color=\"gray\">市场活动</font> <font color=\"gray\">-</font>\n";
+                            htmlStr += "<b>${requestScope.activity.name}</b>\n";
+                            htmlStr += "<small style=\"color: gray;\">\n";
+                            //                                                                                      必然是当前用户写的                                                                  或创建的
+                            htmlStr += newActivityRemark.editFlag == "1"? (newActivityRemark.editTime + " 由" + "${sessionScope.sessionUser.name}" + "修改") : (newActivityRemark.createTime + " 由" + "${sessionScope.sessionUser.name}" + "创建") + "\n";
+                            htmlStr += "</small>\n";
+                            htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
+                            htmlStr += "<a class=\"myHref\" func=\"edit\" href=\"javascript:void(0);\" remarkId=\"" + newActivityRemark.id + "\" noteContent=\"" + newActivityRemark.noteContent + "\" >\n";
+                            htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
+                            htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
+                            htmlStr += "<a class=\"myHref\" func=\"delete\" href=\"javascript:void(0);\" remarkId=\"" + newActivityRemark.id + "\">\n";
+                            htmlStr += "<span class=\" glyphicon glyphicon-remove\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n"
+                            htmlStr += "</div></div></div>\n";
+
+                            $("#remarkListContainer").append(htmlStr);
                         } else {
                             //添加失败
                             //提示信息
@@ -109,7 +133,7 @@
             });
 
             //为删除市场活动超链接添加单击事件
-            $(document).on("click", ".deleteActivityRemarkBtn", function () {
+            $(document).on("click", ".myHref[func='delete']", function () {
                 //收集参数
                 let remarkId = $(this).attr("remarkId");
                 let activityId = "${requestScope.activity.id}";
@@ -126,7 +150,9 @@
                         if (data.code == "1") {
                             //添加成功
                             //刷新市场活动备注列表
-                            refreshActivityRemarkList(data.returnData);
+                            // refreshActivityRemarkList(data.returnData);
+                            //采取把这个div从页面上删掉的方法
+                            $("#div_" + remarkId).remove();//这个选择器技巧很重要，即使用remarkId作为标签的id，但是为区分标签，在id前加上"标签类型_"
                         } else {
                             //添加失败
                             //提示信息
@@ -138,12 +164,16 @@
             });
 
             //为修改市场活动超链接添加单击事件
-            $(document).on("click", ".editActivityRemarkBtn", function () {
-                //把修改按钮上的remarkId贴一份到modal窗口的div上
+            $(document).on("click", ".myHref[func='edit']", function () {
+                //把修改按钮上的remarkId传给修改的modal窗口
                 let remarkId = $(this).attr("remarkId");
-                $("#editRemarkModal").attr("remarkId", remarkId);
+                // $("#editRemarkModal").attr("remarkId", remarkId);
+                //处理id的更好的方法是在表单中添加一个隐藏input！
+                $("#edit-id").val(remarkId);
+
                 //noteContent回显
-                let noteContent = $(this).attr("noteContent");
+                // let noteContent = $(this).attr("noteContent");
+                let noteContent = $("#div_" + remarkId + " h5").text();
                 $("#noteContent").val(noteContent);
                 //弹出modal窗口
                 $("#editRemarkModal").modal("show");
@@ -152,8 +182,9 @@
             //为修改市场活动modal窗口中"更新"按钮添加单击事件
             $("#updateRemarkBtn").click(function () {
                 //收集信息
-                let remarkId = $("#editRemarkModal").attr("remarkId");
-                let noteContent = $("#noteContent").val();
+                // let remarkId = $("#editRemarkModal").attr("remarkId");
+                let remarkId = $("#edit-id").val();
+                let noteContent = $.trim($("#noteContent").val());//去除首尾空格
                 let activityId = "${requestScope.activity.id}";
                 // alert(remarkId);
 
@@ -175,11 +206,16 @@
                     success: function (data) {
                         if (data.code == "1") {
                             //修改成功
+                            let newActivityRemark = data.returnData;
                             //刷新备注列表
-                            refreshActivityRemarkList(data.returnData);
+                            // refreshActivityRemarkList(data.returnData);
+
+                            //采取只更新这一条的方法
+                            $("#div_" + newActivityRemark.id + " h5").text(newActivityRemark.noteContent);//内容
+                            $("#div_" + newActivityRemark.id + " small").text(" " + newActivityRemark.editTime + " 由${sessionScope.sessionUser.name}修改")//修改时间和修改人
+
                             //关闭modal窗口，顺便把modal窗的属性和输入框内容清掉吧
                             $("#noteContent").val("");
-                            $("#editRemarkModal").attr("remarkId", "");
                             $("#editRemarkModal").modal("hide");
                         } else {
                             //修改失败
@@ -193,11 +229,12 @@
             });
         });
 
+        //遍历市场活动备注列表并在remarkListContainer中渲染
         function refreshActivityRemarkList(activityRemarkList) {
             //遍历data中的remarkList，局部刷新，渲染备注列表
             let htmlStr = "";
             $.each(activityRemarkList, function(index, obj) {
-                htmlStr += "<div class=\"remarkDiv\" style=\"height: 60px;\">\n";
+                htmlStr += "<div class=\"remarkDiv\" id=\"div_" + obj.id + "\" style=\"height: 60px;\">\n";
                 htmlStr += "<img title=\"" + obj.createBy + "\" src=\"image/user-thumbnail.png\" style=\"width: 30px; height:30px;\">\n";
                 htmlStr += "<div style=\"position: relative; top: -40px; left: 40px;\">\n";
                 htmlStr += "<h5>" + obj.noteContent + "</h5>\n";
@@ -207,10 +244,10 @@
                 htmlStr += obj.editFlag == "1"? (obj.editTime + " 由" + obj.editBy + "修改") : (obj.createTime + " 由" + obj.createBy + "创建") + "\n";
                 htmlStr += "</small>\n";
                 htmlStr += "<div style=\"position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;\">\n";
-                htmlStr += "<a class=\"myHref editActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\" noteContent=\"" + obj.noteContent + "\" >\n";
+                htmlStr += "<a class=\"myHref\" func=\"edit\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\" noteContent=\"" + obj.noteContent + "\" >\n";
                 htmlStr += "<span class=\"glyphicon glyphicon-edit\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n";
                 htmlStr += "&nbsp;&nbsp;&nbsp;&nbsp;\n";
-                htmlStr += "<a class=\"myHref deleteActivityRemarkBtn\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
+                htmlStr += "<a class=\"myHref\" func=\"delete\" href=\"javascript:void(0);\" remarkId=\"" + obj.id + "\">\n";
                 htmlStr += "<span class=\" glyphicon glyphicon-remove\" style=\"font-size: 20px; color: #E6E6E6;\"></span></a>\n"
                 htmlStr += "</div></div></div>\n";
             });
@@ -236,6 +273,7 @@
             </div>
             <div class="modal-body">
                 <form class="form-horizontal" role="form">
+                    <input type="hidden" id="edit-id">
                     <div class="form-group">
                         <label for="noteContent" class="col-sm-2 control-label">内容</label>
                         <div class="col-sm-10" style="width: 81%;" id="edit-describe">
@@ -325,7 +363,8 @@
         <div style="width: 300px; color: gray;">描述</div>
         <div style="width: 630px;position: relative; left: 200px; top: -20px;">
             <b>
-                ${requestScope.activity.description}
+                <c:if test="${not empty requestScope.activity.description}">${requestScope.activity.description}</c:if>
+                <c:if test="${empty requestScope.activity.description}">&nbsp;</c:if>
             </b>
         </div>
         <div style="height: 1px; width: 850px; background: #D5D5D5; position: relative; top: -20px;"></div>
@@ -341,7 +380,7 @@
     <div id="remarkListContainer">
     <%--    使用jstl遍历request作用域中的remarkList          循环变量名--%>
         <c:forEach items="${requestScope.remarkList}" var="remark">
-            <div class="remarkDiv" style="height: 60px;">
+            <div class="remarkDiv" id="div_${remark.id}" style="height: 60px;">
                 <img title="${remark.createBy}" src="image/user-thumbnail.png" style="width: 30px; height:30px;">
                 <div style="position: relative; top: -40px; left: 40px;">
                     <h5>${remark.noteContent}</h5>
@@ -353,10 +392,10 @@
                         由${remark.editFlag == '1'?remark.editBy:remark.createBy}${remark.editFlag == '1'?'修改':'创建'}
                     </small>
                     <div style="position: relative; left: 500px; top: -30px; height: 30px; width: 100px; display: none;">
-                        <a class="myHref editActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}" noteContent="${remark.noteContent}" >
+                        <a class="myHref" func="edit" href="javascript:void(0);" remarkId="${remark.id}" noteContent="${remark.noteContent}" >
                             <span class="glyphicon glyphicon-edit" style="font-size: 20px; color: #E6E6E6;"></span></a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <a class="myHref deleteActivityRemarkBtn" href="javascript:void(0);" remarkId="${remark.id}">
+                        <a class="myHref" func="delete" href="javascript:void(0);" remarkId="${remark.id}">
                             <span class=" glyphicon glyphicon-remove" style="font-size: 20px; color: #E6E6E6;"></span></a>
                     </div>
                 </div>

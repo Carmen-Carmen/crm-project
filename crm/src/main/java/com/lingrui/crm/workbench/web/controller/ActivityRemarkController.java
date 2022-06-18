@@ -61,14 +61,14 @@ public class ActivityRemarkController {
         //2、调用service层，添加记录
             int affectedRows = activityRemarkService.saveCreateActivityRemark(activityRemark);
             //查出新的activityRemarkList
-            List<ActivityRemark> remarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
+//            List<ActivityRemark> remarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
 
         //3、根据结果，返回响应信息
             objectForReturn = new ObjectForReturn();
             if (affectedRows == 1) {
                 //插入了一条
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
-                objectForReturn.setReturnData(remarkList);
+                objectForReturn.setReturnData(activityRemark);
             } else {
                 //影响条数不对
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
@@ -99,13 +99,14 @@ public class ActivityRemarkController {
         try {
         //1、调用service层执行删除
             int affectedRowNum = activityRemarkService.deleteActivityRemarkById(remarkId);
-            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
+//            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityId);
 
         //2、根据结果生成响应信息
             objectForReturn = new ObjectForReturn();
             if (affectedRowNum == 1) {
+                //只影响一条，即删除成功
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
-                objectForReturn.setReturnData(activityRemarkList);
+//                objectForReturn.setReturnData(activityRemarkList);
             } else {
                 //没删掉或是其他情况
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
@@ -120,6 +121,14 @@ public class ActivityRemarkController {
         return objectForReturn;
     }
 
+    /**
+     * @param activityRemark:
+     * @param session:
+     * @return Object 返回json字符串
+     * @author xulingrui
+     * @description TODO
+     * @date 2022/6/18 12:10
+     */
     @RequestMapping("/workbench/activity/saveEditActivityRemark.do")
     @ResponseBody
     public Object saveEditActivityRemark(ActivityRemark activityRemark, HttpSession session) {
@@ -128,19 +137,20 @@ public class ActivityRemarkController {
         //1、封装剩余参数
         activityRemark.setEditBy(sessionUser.getId());
         activityRemark.setEditTime(DateUtils.formatDateTime(new Date()));
-        activityRemark.setEditFlag(Constants.ACTIVITY_REMARK_EDITED);
+        activityRemark.setEditFlag(Constants.ACTIVITY_REMARK_EDITED);//标记为被修改过
 
         ObjectForReturn objectForReturn = null;
         try {
         //2、调用service层完成编辑
             int affectedRowNum = activityRemarkService.saveEditActivityRemark(activityRemark);
-            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityRemark.getActivityId());
+//            List<ActivityRemark> activityRemarkList = activityRemarkService.queryActivityRemarkForDetailByActivityId(activityRemark.getActivityId());
 
         //3、根据结果生成响应信息
             objectForReturn = new ObjectForReturn();
             if (affectedRowNum == 1) {
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_SUCCESS);
-                objectForReturn.setReturnData(activityRemarkList);
+//                objectForReturn.setReturnData(activityRemarkList);
+                objectForReturn.setReturnData(activityRemark);//把更新过的activityRemark返回
             } else {
                 objectForReturn.setCode(Constants.OBJECT_FOR_RETURN_FAIL);
                 objectForReturn.setMessage(Constants.COMMON_ERROR_MSG);

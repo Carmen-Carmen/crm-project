@@ -12,7 +12,7 @@
 
     <!-- 配置数据源 -->
 <!--    指明外部配置文件路径，以使用占位符填入各个value-->
-    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <context:property-placeholder location="classpath:jdbc_server.properties"/>
     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="${jdbc.driver}"/>
         <property name="username" value="${jdbc.username}"/>
