@@ -12,7 +12,7 @@
     <script type="text/javascript">
 
         //页面加载完毕
-        $(function () {//入口函数
+        $(function () {
 
             //导航中所有文本颜色为黑色
             $(".liClass > a").css("color", "black");
@@ -35,15 +35,14 @@
                 $(this).children("a").css("color", "white");
             });
 
-            //默认打开一个网页，打开窗口在指定的iframe
-            window.open("workbench/main/index.do", "workareaFrame");
+            //在数据字典维护主页面，默认在工作区显示数据字典类型列表
+            window.open("settings/dictionary/type/typeIndex.do", "workareaFrame");
 
             //给退出modal框的"确定"按钮绑定单击事件
             $("#logoutBtn").click(function () {
                 //发送同步请求给UserController的logout方法
                 window.location.href = "settings/qx/user/logout.do";
             });
-
         });
 
     </script>
@@ -115,7 +114,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
                 <button type="button" class="btn btn-primary" data-dismiss="modal"
-                        onclick="window.location.href='login.html';">更新
+                        onclick="window.location.href='login.jsp';">更新
                 </button>
             </div>
         </div>
@@ -137,7 +136,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" data-dismiss="modal" id="logoutBtn">确定</button>
+                <button type="button" id="logoutBtn" class="btn btn-primary" data-dismiss="modal">确定</button>
             </div>
         </div>
     </div>
@@ -156,6 +155,7 @@
                         class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
+                    <li><a href="workbench/index.do"><span class="glyphicon glyphicon-home"></span> 工作台</a></li>
                     <li><a href="settings/index.do"><span class="glyphicon glyphicon-wrench"></span> 系统设置</a></li>
                     <li><a href="javascript:void(0)" data-toggle="modal" data-target="#myInformation"><span
                             class="glyphicon glyphicon-file"></span> 我的资料</a></li>
@@ -176,58 +176,14 @@
     <div id="navigation" style="left: 0px; width: 18%; position: relative; height: 100%; overflow:auto;">
 
         <ul id="no1" class="nav nav-pills nav-stacked">
-            <li class="liClass"><a href="workbench/main/index.do" target="workareaFrame"><span
-                    class="glyphicon glyphicon-home"></span> 工作台</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-tag"></span> 动态</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-time"></span> 审批</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-user"></span> 客户公海</a></li>
-            <li class="liClass"><a href="workbench/activity/index.do" target="workareaFrame"><span
-                    class="glyphicon glyphicon-play-circle"></span> 市场活动</a></li>
-            <li class="liClass"><a href="clue/index.html" target="workareaFrame"><span
-                    class="glyphicon glyphicon-search"></span> 线索（潜在客户）</a></li>
-            <li class="liClass"><a href="customer/index.html" target="workareaFrame"><span
-                    class="glyphicon glyphicon-user"></span> 客户</a></li>
-            <li class="liClass"><a href="contacts/index.html" target="workareaFrame"><span
-                    class="glyphicon glyphicon-earphone"></span> 联系人</a></li>
-            <li class="liClass"><a href="transaction/index.html" target="workareaFrame"><span
-                    class="glyphicon glyphicon-usd"></span> 交易（商机）</a></li>
-            <li class="liClass"><a href="visit/index.html" target="workareaFrame"><span
-                    class="glyphicon glyphicon-phone-alt"></span> 售后回访</a></li>
-            <li class="liClass">
-                <a href="#no2" class="collapsed" data-toggle="collapse"><span class="glyphicon glyphicon-stats"></span>
-                    统计图表</a>
-                <ul id="no2" class="nav nav-pills nav-stacked collapse">
-                    <li class="liClass"><a href="chart/activity/index.html"
-                                           target="workareaFrame">&nbsp;&nbsp;&nbsp;<span
-                            class="glyphicon glyphicon-chevron-right"></span> 市场活动统计图表</a></li>
-                    <li class="liClass"><a href="chart/clue/index.html" target="workareaFrame">&nbsp;&nbsp;&nbsp;<span
-                            class="glyphicon glyphicon-chevron-right"></span> 线索统计图表</a></li>
-                    <li class="liClass"><a href="chart/customerAndContacts/index.html" target="workareaFrame">&nbsp;&nbsp;&nbsp;<span
-                            class="glyphicon glyphicon-chevron-right"></span> 客户和联系人统计图表</a></li>
-                    <li class="liClass"><a href="chart/transaction/index.html" target="workareaFrame">&nbsp;&nbsp;&nbsp;<span
-                            class="glyphicon glyphicon-chevron-right"></span> 交易统计图表</a></li>
-                </ul>
-            </li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-file"></span> 报表</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-shopping-cart"></span> 销售订单</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-send"></span> 发货单</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-earphone"></span> 跟进</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-leaf"></span> 产品</a></li>
-            <li class="liClass"><a href="javascript:void(0);" target="workareaFrame"><span
-                    class="glyphicon glyphicon-usd"></span> 报价</a></li>
+            <li class="liClass"><a href="settings/dictionary/type/typeIndex.do" target="workareaFrame"><span
+                    class="glyphicon glyphicon-book"></span> 字典类型</a></li>
+            <li class="liClass"><a href="settings/dictionary/value/valueIndex.do" target="workareaFrame"><span
+                    class="glyphicon glyphicon-list"></span> 字典值</a></li>
         </ul>
 
         <!-- 分割线 -->
-        <div id="divider1"
-             style="position: absolute; top : 0px; right: 0px; width: 1px; height: 100% ; background-color: #B3B3B3;"></div>
+        <div id="divider1" style="position: absolute; top : 0px; right: 0px; width: 1px; height: 100% ; background-color: #B3B3B3;"></div>
     </div>
 
     <!-- 工作区 -->
