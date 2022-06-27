@@ -144,7 +144,7 @@
         SELECT <include refid="Base_Column_List"></include>
         FROM tbl_dic_value
         WHERE type_code = #{typeCode}
-        ORDER BY order_no
+        ORDER BY CAST(order_no AS SIGNED)
     </select>
 
 <!--    int insertDictValue(DictValue dictValue);-->
